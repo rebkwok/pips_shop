@@ -1,0 +1,15 @@
+<select
+    {% comment %} name must be product id for api call - actual product_variant id {% endcomment %}
+    name="product_id" 
+    required="" 
+    id="id_product_{{ product_id }}"
+    class="form-control"
+>
+    {% for variant in product.live_variants %}
+        {% if variant.stock > 0 %}
+            <option value="{{ variant.id }}">{{ variant.name }} - £{{ variant.price }} ({{ variant.stock }} in stock)</option>
+        {% else %}
+            <option disabled=disabled value="{{ variant.id }}">{{ variant.name }} - £{{ variant.price }} (out of stock)</option>
+        {% endif %}
+    {% endfor %}
+</select>

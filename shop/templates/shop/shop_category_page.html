@@ -1,0 +1,31 @@
+{% extends "shop/base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+
+{% block content %}
+    {% include "shop/includes/header-hero.html" %}
+
+    <div class="container category-detail">
+        <div class="row">
+            <h1>{{ category.name }}</h1>
+            
+            
+            <div class="col-md-12">
+                <div class="row">
+                    {% if category.body %}
+                        <p class="category-detail__body">
+                            {{ category.body|richtext }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="container product-listing-card__container pt-2">
+                    <div class="product-listing-card__grid">
+                        {% for product in category.live_products %}
+                            {% include "shop/includes/product-listing-card.html" %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

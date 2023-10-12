@@ -1,0 +1,15 @@
+db.sqlite3
+
+.venv/
+venv/
+
+__pycache__/
+.pyc
+
+media/
+
+.env
+
+*.log
+
+.coverage
