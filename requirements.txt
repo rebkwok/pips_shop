@@ -99,6 +99,10 @@ django-modelcluster==6.1
 django-permissionedforms==0.1
     # via wagtail
 django-salesman[pygments]==1.2.0
+    # via
+    #   -r requirements.in
+    #   django-salesman-stripe
+django-salesman-stripe==0.1.6
     # via -r requirements.in
 django-ses[events]==3.5.0
     # via -r requirements.in
@@ -295,6 +299,7 @@ pyyaml==6.0.1
 requests==2.31.0
     # via
     #   django-ses
+    #   stripe
     #   wagtail
 ruff==0.0.292
     # via -r requirements.in
@@ -321,6 +326,8 @@ stack-data==0.6.3
     # via ipython
 starlette==0.27.0
     # via fastapi
+stripe==2.76.0
+    # via django-salesman-stripe
 telepath==0.3.1
     # via wagtail
 tomli==2.0.1

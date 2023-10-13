@@ -39,7 +39,8 @@
                 {% include "shop/includes/select_variant_field.html" %}
             </div>
         </div>
-            
+        
+        {% if not product.out_of_stock %}
         <div class="input-group quantity mb-3">
             <div class="input-group-prepend">
                 <span 
@@ -70,6 +71,7 @@
                 hx-target="#basket-icon"
             >  
         </div>
+        {% endif %}
         <input type="hidden" name="product_type" value="shop.ProductVariant">
 
               

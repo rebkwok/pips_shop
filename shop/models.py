@@ -55,7 +55,10 @@ class Basket(BaseBasket):
 
 
 class BasketItem(BaseBasketItem):
-    pass
+    
+    @property
+    def name(self):
+        return self.product.get_full_name() if self.product else "(no name)"
 
 
 # PRODUCTS
@@ -152,6 +155,9 @@ class Product(models.Model):
     def live_variants(self):
         return self.variants.filter(live=True)
 
+    def out_of_stock(self):
+        return self.variants.aggregate(models.Sum("stock"))["stock__sum"] <= 0
+
     @property
     def identifier(self):
         return slugify(f"{self.category.name}-{self.name}")
@@ -166,17 +172,38 @@ class Product(models.Model):
         return all_images
 
 
+class Size(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+
+class Colour(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variants"
     )
-    name = models.CharField(
+    variant_name = models.CharField(
+        null=True, blank=True,
         max_length=255,
         verbose_name="Variant name",
         help_text="""
             A variant represents a single item that can be ordered/purchased. E.g.
-            if the product is 'T-shirt', a variant might be "Black, Small".  A product
-            'Pen' might have variants 'Single', 'Pack of 5', 'Pack of 10'
+            A product 'Pen' might have variants 'Single', 'Pack of 5', 'Pack of 10'.
+            Can be left blank if there is only one variant for this product, or if it
+            only varies by colour and/or size. 
+            e.g. 
+            - Product Mug: one product variant, with no name, colour or size specifications.
+            - Product T-shirt: size/colour variants with no separate name (e.g. black,S)
+            - Product Hoodie: variants with name "Men's Hoodie", "Women's Hoodie", each 
+              with size and colour options
         """,
     )
     image = models.ForeignKey(
@@ -192,45 +219,41 @@ class ProductVariant(models.Model):
         default=True, help_text="Display this product variant in the shop"
     )
 
-    # COLORS = [
-    #     ("black", "Black"),
-    #     ("grey", "Grey"),
-    #     ("white", "White"),
-    # ]
-    # GENDERS = [
-    #     ("m", "Mens"),
-    #     ("w", "Womens"),
-    #     ("u", "Unisex"),
-    # ]
-    # SIZES = [
-    #     ("xxs", "XX-Small"),
-    #     ("xs", "X-Small"),
-    #     ("s", "Small"),
-    #     ("m", "Medium"),
-    #     ("l", "Large"),
-    #     ("xl", "X-Large"),
-    #     ("xxl", "XX-Large"),
-    # ]
-    # PACK_SIZES = [
-    #     (
-    #         (1, 1),
-    #         (5, 5),
-    #         (10, 10)
-    #     )
-    # ]
+    colour = models.ForeignKey(Colour, null=True, blank=True, on_delete=models.SET_NULL)
+    size = models.ForeignKey(Size, null=True, blank=True, on_delete=models.SET_NULL)
 
-    # # Variant data
-    # # Only pack size (default 1) is required
-    # colour = models.CharField(max_length=50, choices=COLORS, null=True, blank=True)
-    # gender = models.CharField(max_length=50, choices=GENDERS, null=True, blank=True)
-    # size = models.CharField(max_length=50, choices=SIZES, null=True, blank=True)
-    # pack_size = models.CharField(max_length=50, choices=PACK_SIZES, default=PACK_SIZES[0][0])
+    class Meta:
+        unique_together = ("variant_name", "colour", "size")
 
     def __str__(self):
-        return f"{self.product.name} - {self.name}"
+        product_name = self.product.name
+        if self.name:
+            return f"{product_name} - {self.name}"
+        return product_name
+
+    def get_full_name(self):
+        return str(self)
+
+    @property
+    def name(self):
+        name = self.variant_name or ""
+        if name and (self.colour or self.size):
+            name += " - "
+        if self.colour:
+            name += str(self.colour)
+            if self.size:
+                name += ", "
+        if self.size:
+            name += str(self.size)
+        return name
 
     def get_price(self, request):
         return self.price
+
+    def name_and_price(self):
+        if self.name:
+            return f"{self.name} - £{self.price}"
+        return f"£{self.price}"
 
     @property
     def category(self):

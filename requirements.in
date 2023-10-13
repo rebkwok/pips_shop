@@ -24,5 +24,6 @@ black
 model_bakery
 
 django-salesman[pygments]
+django-salesman-stripe
 crispy-bootstrap4
 

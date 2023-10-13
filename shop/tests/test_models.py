@@ -29,11 +29,41 @@ def test_product(product):
 
 
 def test_product_variant(product):
-    variant = baker.make("shop.ProductVariant", product=product, name="Small", price=10)
+    variant = baker.make("shop.ProductVariant", product=product, variant_name="Small", price=10)
     assert str(variant) == "Test Product - Small"
     assert variant.get_price(None) == 10
     assert variant.category == product.category
     assert variant.code == str(variant.id)
+
+
+@pytest.mark.parametrize(
+    "variant_name,colour,size,expected_str,expected_name_and_price",
+    [
+        (None, None, None, "Test Product", "£10"),
+        ("Mug", None, None, "Test Product - Mug", "Mug - £10"),
+        (None, "Green", None, "Test Product - Green", "Green - £10"),
+        ("T-shirt", None, "S", "Test Product - T-shirt - S", "T-shirt - S - £10"),
+        ("T-shirt", "Black", None, "Test Product - T-shirt - Black", "T-shirt - Black - £10"),
+        ("T-shirt", None, "One size", "Test Product - T-shirt - One size", "T-shirt - One size - £10"),
+        ("T-shirt", "Red", "M", "Test Product - T-shirt - Red, M", "T-shirt - Red, M - £10"),
+    ]
+)
+def test_product_variant_str(product, variant_name, colour, size, expected_str, expected_name_and_price):
+    variant = baker.make(
+        "shop.ProductVariant", 
+        product=product, 
+        variant_name=variant_name, 
+        price=10
+    )
+    if colour:
+        variant.colour = baker.make("shop.Colour", name=colour)
+        variant.save()
+    if size:
+        variant.size = baker.make("shop.Size", name=size)
+        variant.save()
+    
+    assert str(variant) == expected_str
+    assert variant.name_and_price() == expected_name_and_price
 
 
 def test_live_products(category, product):
@@ -46,7 +76,7 @@ def test_live_products(category, product):
 
     # make a not-live variant
     variant = baker.make(
-        "shop.ProductVariant", product=product, name="Small", price=10, live=False
+        "shop.ProductVariant", product=product, variant_name="Small", price=10, live=False
     )
     assert category.live_products.count() == 0
     assert product.variants.exists()

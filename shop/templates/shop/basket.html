@@ -22,10 +22,11 @@
                                         <div class="input-group quantity mb-3">
                                             <div class="input-group-prepend">
                                                 <span 
+                                                    id="id_dec_wrapper_{{ item.product_id }}"
                                                     class="input-group-text"
                                                     hx-trigger="click"
                                                     hx-target="#id_quantity_wrapper_{{ item.product_id }}"
-                                                    hx-get="{% url 'shop:decrease_quantity' item.product_id %}"
+                                                    hx-get="{% url 'shop:decrease_quantity' item.product_id %}?ref=basket"
                                                     hx-include="[id='id_quantity_{{ item.product_id }}']"  
                                                 >-</span>
                                             </div>
@@ -34,21 +35,30 @@
                                             </span>
                                             <div class="input-group-append">
                                                 <span 
+                                                    id="id_inc_wrapper_{{ item.product_id }}"
                                                     class="input-group-text"
                                                     hx-trigger="click"
                                                     hx-target="#id_quantity_wrapper_{{ item.product_id }}"
-                                                    hx-get="{% url 'shop:increase_quantity' item.product_id %}"
+                                                    hx-get="{% url 'shop:increase_quantity' item.product_id %}?ref=basket"
                                                     hx-include="[id='id_quantity_{{ item.product_id }}']"  
                                                 >+</span>
                                             </div>
-                                            <input type="submit" 
-                                            class="btn basket-btn"
-                                            value="Update"
-                                            hx-post="{% url 'shop:update_quantity' item.ref %}"
-                                            hx-trigger="click"
+                                            <input type="hidden" 
+                                                class="btn basket-btn"
+                                                value="Update"
+                                                hx-post="{% url 'shop:update_quantity' item.ref %}"
+                                                hx-trigger="quantity-changed from:body"
+                                                hx-sync="#id_inc_wrapper_{{ item.product_id }}:queue first"
+                                            >
+                                            <input type="hidden" 
+                                                class="btn basket-btn"
+                                                value="Update"
+                                                hx-post="{% url 'shop:update_quantity' item.ref %}"
+                                                hx-trigger="quantity-changed from:body"
+                                                hx-sync="#id_dec_wrapper_{{ item.product_id }}:queue first"
                                             >
                                             <button type="submit" 
-                                                class="btn basket-btn basket-btn-danger"
+                                                class="btn basket-btn basket-btn-danger ml-4"
                                                 value="X"
                                                 hx-post="{% url 'shop:delete' item.ref %}"
                                                 hx-trigger="click"

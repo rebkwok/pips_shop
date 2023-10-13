@@ -93,13 +93,10 @@ def post_init_item(sender, instance, **kwargs):
 
 @receiver(post_save, sender=BasketItem)
 def post_save_item(sender, instance, **kwargs):
-    quantity_diff = instance.quantity - instance._current_quantity
-    if quantity_diff > 0:
-        instance.product.stock -= quantity_diff
-        instance.product.save()
-    elif quantity_diff < 0:
-        instance.product.stock += quantity_diff
-        instance.product.save()
+    quantity_diff = instance._current_quantity - instance.quantity
+    # positive diff means items have been taken out of basket, so add to stock
+    instance.product.stock += quantity_diff
+    instance.product.save()
 
 
 @receiver(post_delete, sender=BasketItem)

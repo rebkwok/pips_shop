@@ -116,6 +116,7 @@ INSTALLED_APPS = [
     "salesman.admin",
     "rest_framework",
     "shop",
+    "salesman_stripe",
 ]
 
 MIDDLEWARE = [
@@ -412,7 +413,8 @@ SALESMAN_PRODUCT_TYPES = {
     "shop.ProductVariant": "shop.serializers.ProductVariantSerializer",
 }
 SALESMAN_PAYMENT_METHODS = [
-    "shop.payment.PayInAdvance",
+    # "shop.payment.PayInAdvance",
+    "shop.payment.PayByStripe",
 ]
 SALESMAN_BASKET_MODIFIERS = [
     "shop.modifiers.ShippingCostModifier",
@@ -421,3 +423,18 @@ SALESMAN_BASKET_MODIFIERS = [
 # for crispy forms
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 USE_CRISPY = True
+
+SALESMAN_STRIPE_SECRET_KEY=env.str("SALESMAN_STRIPE_SECRET_KEY")
+SALESMAN_STRIPE_WEBHOOK_SECRET=env.str("SALESMAN_STRIPE_WEBHOOK_SECRET")
+
+# Account ID for Stripe connect account
+STRIPE_CONNECTED_ACCOUNT=env.str("STRIPE_CONNECTED_ACCOUNT")
+
+# Payment method label used when displayed in the basket.
+SALESMAN_STRIPE_PAYMENT_LABEL = 'Pay with Stripe'
+
+# Default ISO currency used for payments (https://stripe.com/docs/currencies)
+SALESMAN_STRIPE_DEFAULT_CURRENCY = 'gbp'
+
+# Default paid status for fullfiled orders.
+# SALESMAN_STRIPE_PAID_STATUS = 'PROCESSING'

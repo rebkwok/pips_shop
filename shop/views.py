@@ -46,27 +46,55 @@ class ProductCategoryDetailView(DetailView):
         return context_data
 
 
-def decrease_quantity(request, product_id):
+def decrease_quantity(request, product_id):        
     value = int(request.GET.get("quantity", 1))
     if value > 1:
         value -= 1
     return _change_quantity(request, product_id, value)
 
 
+def get_basket_item(basket, product_id):
+    return next(
+        item for item in basket["items"] if item["product_id"] == int(product_id)
+    )
+
+
 def increase_quantity(request, product_id):
+    variant = ProductVariant.objects.get(id=int(product_id))
     value = int(request.GET.get("quantity", 1))
-    value += 1
-    return _change_quantity(request, product_id, value)
+    if request.GET.get("ref") == "basket":
+        # increasing a value from the basket; current basket quantity 
+        # is already incorporated into stock numbers
+        # we need to check the actual basket quantity because user may have increase/decreased
+        # value in the form field without actually updating
+        current_quantity = get_basket_item(get_basket(request), product_id)["quantity"]
+        stock_excluding_current_basket = variant.stock + current_quantity
+        new_quantity = value + 1
+        can_increase = (stock_excluding_current_basket - new_quantity) >= 0
+    else:
+        can_increase = variant.stock - (value + 1) >= 0
+    if can_increase:
+        value += 1
+    return _change_quantity(request, product_id, value, can_increase=can_increase)
 
 
-def _change_quantity(request, product_id, new_value):
+def _change_quantity(request, product_id, new_value, can_increase=True):
     context = {"product_id": product_id, "value": new_value}
     resp_str = render_to_string("shop/includes/quantity_field.html", context, request)
     resp_str += f"""
         <div id='added_{product_id}' hx-swap-oob='true'></div>
         <div id='updated_{product_id}' hx-swap-oob='true'></div>
     """
-    return HttpResponse(resp_str)
+    if not can_increase:
+        resp_str += (
+            f"<div id='updated_{product_id}' class='alert-info' hx-swap-oob='true'>"
+            "Can't increase quantity</div>"
+        )
+        resp = HttpResponse(resp_str)
+        return resp
+    resp = HttpResponse(resp_str)
+    resp.headers['HX-Trigger'] = "quantity-changed"
+    return resp
 
 
 def add_to_basket(request, product_id):
@@ -97,8 +125,7 @@ def update_quantity(request, ref):
     if current_item_resp.data["quantity"] == int(request.POST.get("quantity")):
         # nothing to do
         result_html = (
-            f"<div id='updated_{product_id}' class='alert-info' hx-swap-oob='true'>"
-            "Nothing to update</div>"
+            f"<div id='updated_{product_id}' class='alert-info' hx-swap-oob='true'></div>"
         )
     else:
         request.method = "PUT"
@@ -113,9 +140,7 @@ def update_quantity(request, ref):
                 {"extra_rows": basket["extra_rows"]},
                 request,
             )
-            subtotal = next(
-                item["subtotal"] for item in basket["items"] if item["product_id"] == product_id
-            )
+            subtotal = get_basket_item(basket, product_id)["subtotal"]
             result_html = f"""
                 <span id='subtotal_{product_id}' hx-swap-oob='true'>{subtotal}</span>
                 <span id='quantity_{product_id}' hx-swap-oob='true'>{resp.data['quantity']}</span>
@@ -211,7 +236,11 @@ def checkout_view(request):
         form = CheckoutForm(payment_method=payment_method, data=request.POST)
         if form.is_valid():
             checkout = CheckoutViewSet.as_view({"post": "create"})(request)
+
             if checkout.status_code == 201:
+                if payment_method == "stripe":
+                    return HttpResponseRedirect(checkout.data["url"])
+
                 parsed_url = urlparse(checkout.data["url"])
                 token = dict(parse_qsl(parsed_url.query))["token"]
                 return HttpResponseRedirect(
