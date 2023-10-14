@@ -7,6 +7,7 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from search import views as search_views
 from shop import urls as shop_urls
+from shop.payment import stripe_webhook_view
 
 
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
     path("shop/", include(shop_urls)),
+    path("stripe/webhook/", stripe_webhook_view, name="stripe-webhook"),
     path("api/", include("salesman.urls")),
 ]
 

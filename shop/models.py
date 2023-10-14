@@ -1,4 +1,6 @@
+import logging
 from django.db import models, transaction
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import slugify
 from salesman.basket.models import BaseBasket, BaseBasketItem
@@ -21,8 +23,20 @@ from wagtail.models import Page
 # ORDERS
 
 
+SHIPPING_METHODS = {
+    "collect": "Collect in store", 
+    "deliver": "Delivery"
+}
+
+logger = logging.getLogger(__name__)
+
+
 class Order(BaseOrder):
     name = models.CharField(max_length=255, verbose_name="Name")
+    shipping_method = models.CharField(
+        choices=tuple(SHIPPING_METHODS.items()),
+        default="collect"
+    )
 
     @transaction.atomic
     def populate_from_basket(
@@ -31,7 +45,9 @@ class Order(BaseOrder):
         request,
         **kwargs,
     ) -> None:
-        self.name = basket.extra.pop("name")
+        basket.extra["basket_id"] = basket.id
+        self.name = basket.extra.pop("name", "")
+        self.shipping_method = basket.shipping_method
         return super().populate_from_basket(basket, request, **kwargs)
 
 
@@ -51,7 +67,10 @@ class OrderNote(BaseOrderNote):
 
 
 class Basket(BaseBasket):
-    pass
+    shipping_method = models.CharField(
+        choices=tuple(SHIPPING_METHODS.items()),
+        default="collect"
+    )
 
 
 class BasketItem(BaseBasketItem):

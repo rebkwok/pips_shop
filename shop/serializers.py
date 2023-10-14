@@ -18,3 +18,4 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 class OrderSerializer(SalesmanOrderSerializer):
     class Meta(SalesmanOrderSerializer.Meta):
         SalesmanOrderSerializer.Meta.fields.insert(11, "name")
+        SalesmanOrderSerializer.Meta.fields.insert(12, "shipping_method")

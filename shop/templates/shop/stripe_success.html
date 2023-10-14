@@ -1,0 +1,19 @@
+{% extends "shop/base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+
+{% block content %}
+    {% include "includes/header-hero.html" %}
+
+    <div class="container shop-basket">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Thank you for your order!</h2>
+                
+                <p class="mt-4">You have been charged £{{ total|floatformat:2 }}.</p>
+                <p>Your order confirmation has been emailed to {{email}}.</p>
+                
+            </div>
+        </div>
+    </div>
+{% endblock content %}

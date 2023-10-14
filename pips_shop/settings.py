@@ -147,6 +147,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "wagtail.contrib.settings.context_processors.settings",
+                "shop.context_processors.shop_context",
             ],
         },
     },
@@ -409,6 +410,7 @@ SALESMAN_ORDER_ITEM_MODEL = "shop.OrderItem"
 SALESMAN_ORDER_PAYMENT_MODEL = "shop.OrderPayment"
 SALESMAN_ORDER_NOTE_MODEL = "shop.OrderNote"
 SALESMAN_ORDER_SERIALIZER = "shop.serializers.OrderSerializer"
+
 SALESMAN_PRODUCT_TYPES = {
     "shop.ProductVariant": "shop.serializers.ProductVariantSerializer",
 }
@@ -436,5 +438,6 @@ SALESMAN_STRIPE_PAYMENT_LABEL = 'Pay with Stripe'
 # Default ISO currency used for payments (https://stripe.com/docs/currencies)
 SALESMAN_STRIPE_DEFAULT_CURRENCY = 'gbp'
 
+SALESMAN_STRIPE_WEBHOOK_URL = "/stripe/webhook/"
 # Default paid status for fullfiled orders.
 # SALESMAN_STRIPE_PAID_STATUS = 'PROCESSING'

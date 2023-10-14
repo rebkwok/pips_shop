@@ -11,38 +11,46 @@ class CheckoutForm(forms.Form):
     email1 = forms.EmailField(label="Email (again)")
     name = forms.CharField(label="Name")
     payment_method = forms.CharField()
+    shipping_method = forms.CharField()
     shipping_address = forms.CharField(
-        widget=forms.Textarea(attrs={"cols": 40, "rows": 6})
+        widget=forms.Textarea(attrs={"cols": 40, "rows": 6}),
     )
-    billing_address = forms.CharField(
-        widget=forms.Textarea(attrs={"cols": 40, "rows": 6})
-    )
+    billing_address = forms.CharField()
 
     def __init__(self, **kwargs):
         payment_method = kwargs.pop("payment_method")
+        shipping_method = kwargs.pop("shipping_method")
         super().__init__(**kwargs)
         self.helper = FormHelper()
         self.fields["payment_method"].initial = payment_method
+        self.fields["shipping_method"].initial = shipping_method
+
+        # shipping_address and billing_address are required fields for the
+        # checkout serializer (but can be blank)
+        # We currently never need to collect billing address as it will be
+        # handled by Stripe
+        if shipping_method != "collect":
+            shipping_address_layout = "shipping_address"
+        else:
+            shipping_address_layout = Hidden("shipping_address", "-")            
 
         self.helper.layout = Layout(
             Hidden("payment_method", payment_method),
+            Hidden("shipping_method", shipping_method),
+            Hidden("billing_address", "-"),
+            "name",
             "email",
             "email1",
-            "name",
-            "shipping_address",
-            Button(
-                "copy_shipping_address",
-                "Copy shipping address for billing",
-                css_class="btn btn-outline-primary",
-                **{
-                    "hx-target": ".billing_address_wrapper",
-                    "hx-get": reverse("shop:copy_shipping_address"),
-                    "hx-include": "[id='id_shipping_address']",
-                }
-            ),
-            Field(
-                "billing_address",
-                wrapper_class="billing_address_wrapper",
-            ),
+            shipping_address_layout,
             Submit("submit", PAYMENT_METHOD_BUTTON_TEXT[payment_method]),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get("email")
+        email1 = cleaned_data.get("email1")
+        if email != email1:
+            self.add_error(
+                "email1", "Email fields do not match"
+            )
+        return cleaned_data

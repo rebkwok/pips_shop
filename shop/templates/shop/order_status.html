@@ -26,8 +26,10 @@
                         {% endfor %}
                         </ul>
                     <li>Order date: {{ order.date_created|date:"d M Y" }}</li>
-                    <li>Shipping address: {{ order.shipping_address }}</li>
-                    <li>Billing address: {{ order.billing_address }}</li>
+                    <li>Shipping method: {{ shipping_method }}</li>
+                    {% if order.shipping_method != "collect" %}
+                        <li>Shipping address: {{ order.shipping_address }}</li>
+                    {% endif %}
                     <li>Order total: £{{ order.total }}</li>
                     <li>Amount paid: £{{ order.amount_paid }}</li>
                     <li>Amount outstanding: £{{ order.amount_outstanding }}</li>

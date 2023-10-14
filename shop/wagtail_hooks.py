@@ -62,8 +62,10 @@ class OptionsGroup(SnippetViewSetGroup):
 
 class OrderAdmin(SalesmanOrderAdmin):
     SalesmanOrderAdmin.list_display.insert(2, "name")
+    SalesmanOrderAdmin.list_display.insert(4, "shipping_method")
     SalesmanOrderAdmin.search_fields.append("name")
     SalesmanOrderAdmin.default_panels[2].children.insert(2, ReadOnlyPanel("name"))
+    SalesmanOrderAdmin.default_panels[2].children.insert(3, ReadOnlyPanel("shipping_method"))
 
 
 register_snippet(OptionsGroup)

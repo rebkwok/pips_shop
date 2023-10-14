@@ -1,8 +1,12 @@
 # payment.py
 from django.conf import settings
-from django.urls import path, reverse
+from django.shortcuts import render
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+
 from salesman.checkout.payment import PaymentMethod
 from salesman_stripe.payment import StripePayment
+
 import stripe
 
 from shop.models import Order
@@ -47,20 +51,9 @@ class PayInAdvance(PaymentMethod):
 
 class PayByStripe(StripePayment):
 
-    # identifier = "pips-stripe"
-    # label = "Pay by Stripe"
-
-    def get_urls(self):
-        """
-        Register Stripe views.
-        """
-        return [
-            path("cancel/", self.cancel_view, name="stripe-cancel"),
-            path("success/?session_id={CHECKOUT_SESSION_ID}", self.success_view, name="stripe-success"),
-            path("webhook/", self.webhook_view, name="stripe-webhook"),
-        ]
-
     def basket_payment(self, basket, request):
+        basket.extra["name"] = request.POST.get("name")
+        basket.update(request)
         return super().basket_payment(basket, request)
 
 
@@ -75,9 +68,7 @@ class PayByStripe(StripePayment):
         See available data to be set in Stripe:
         https://stripe.com/docs/api/checkout/sessions/create
         """
-
         session_data = super().get_stripe_session_data(obj, request)
-
         connected_stripe_account_id = settings.STRIPE_CONNECTED_ACCOUNT
         # add in the connect client info
         session_data["payment_intent_data"] = {
@@ -86,18 +77,18 @@ class PayByStripe(StripePayment):
                 "destination": connected_stripe_account_id,
             }
         }
+        # add in the shipping method
+        session_data["metadata"] = {"shipping_method": obj.shipping_method} 
+        # return the session id
+        session_data["success_url"] += "?session_id={CHECKOUT_SESSION_ID}"   
         return session_data
-
     
     @classmethod
     def cancel_view(cls, request):
         """
         Handle cancelled payment on Stripe.
         """
-        # if app_settings.SALESMAN_STRIPE_CANCEL_URL:
-        #     return redirect(app_settings.SALESMAN_STRIPE_CANCEL_URL)
-        # return render(request, "salesman_stripe/cancel.html")
-        return super().cancel_view(request)
+        return render(request, "shop/stripe_cancel.html")
 
     @classmethod
     def success_view(cls, request):
@@ -107,8 +98,10 @@ class PayByStripe(StripePayment):
         checkout_session_id = request.GET.get("session_id")
         session = stripe.checkout.Session.retrieve(checkout_session_id)
         customer = stripe.Customer.retrieve(session.customer)
-        import ipdb; ipdb.set_trace()
-        # if app_settings.SALESMAN_STRIPE_SUCCESS_URL:
-        #     return redirect(app_settings.SALESMAN_STRIPE_SUCCESS_URL)
-        # return render(request, "salesman_stripe/success.html")
-        return super().success_view(request)
+        context = {"email": customer.email, "total": session.amount_total / 100 }
+        return render(request, "shop/stripe_success.html", context)
+
+
+@csrf_exempt
+def stripe_webhook_view(request):
+    return PayByStripe.webhook_view(request)

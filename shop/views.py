@@ -9,10 +9,14 @@ from django.urls import reverse
 from django.views.generic import DetailView
 from salesman.basket.views import BasketViewSet
 from salesman.checkout.views import CheckoutViewSet
+from salesman.core.utils import get_salesman_model
 
 from .forms import CheckoutForm
-from .models import ProductCategory, ProductVariant, BasketItem
+from .models import ProductCategory, ProductVariant, SHIPPING_METHODS
 from .payment import PAYMENT_METHOD_DESCRIPTIONS
+
+
+Basket = get_salesman_model("Basket")
 
 
 def get_basket(request):
@@ -59,20 +63,24 @@ def get_basket_item(basket, product_id):
     )
 
 
-def increase_quantity(request, product_id):
-    variant = ProductVariant.objects.get(id=int(product_id))
-    value = int(request.GET.get("quantity", 1))
-    if request.GET.get("ref") == "basket":
+def can_increase_quantity(request, variant, value, in_basket=False):
+    if in_basket:
         # increasing a value from the basket; current basket quantity 
         # is already incorporated into stock numbers
         # we need to check the actual basket quantity because user may have increase/decreased
         # value in the form field without actually updating
-        current_quantity = get_basket_item(get_basket(request), product_id)["quantity"]
+        current_quantity = get_basket_item(get_basket(request), variant.id)["quantity"]
         stock_excluding_current_basket = variant.stock + current_quantity
         new_quantity = value + 1
-        can_increase = (stock_excluding_current_basket - new_quantity) >= 0
+        return (stock_excluding_current_basket - new_quantity) >= 0
     else:
-        can_increase = variant.stock - (value + 1) >= 0
+        return variant.stock - (value + 1) >= 0
+
+def increase_quantity(request, product_id):
+    variant = ProductVariant.objects.get(id=int(product_id))
+    value = int(request.GET.get("quantity", 1))
+    in_basket = request.GET.get("ref") == "basket"
+    can_increase = can_increase_quantity(request, variant, value, in_basket)
     if can_increase:
         value += 1
     return _change_quantity(request, product_id, value, can_increase=can_increase)
@@ -100,16 +108,33 @@ def _change_quantity(request, product_id, new_value, can_increase=True):
 def add_to_basket(request, product_id):
     # quantity being added; we will decrease the stock by the same amount
     resp = BasketViewSet.as_view({"post": "create"})(request)
-    if resp.status_code == 201:
+    variant = ProductVariant.objects.get(id=product_id)
+    can_increase = can_increase_quantity(
+        request, variant, int(request.POST.get("quantity")), in_basket=True
+    )
+
+    if resp.status_code == 201 and can_increase:
         request.method = "GET"
-        variant = ProductVariant.objects.get(id=product_id)
         new_basket_quantity = get_basket_quantity(request)
-        variant_html = render_to_string("shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request)
         resp_str = f"""
             <div>{_basket_icon_html(request, new_basket_quantity)}</div>
-            <div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>
             <div id='added_{product_id}' class='alert-success mt-2' hx-swap-oob='true'>Added!</div>
         """
+        if variant.product.out_of_stock():
+            resp_str += "<div id='change_quantity_wrapper' hx-swap-oob='true'></div>"
+        else:
+            # update variant dropdown
+            variant_html = render_to_string(
+                "shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request
+            )
+            # set quantity back to 1
+            quantity_to_add_html = render_to_string(
+                "shop/includes/quantity_field.html", {"product_id": product_id, "value": 1}, request
+                )
+            resp_str += f"""
+                <div id='id_quantity_wrapper_{ product_id }' hx-swap-oob='true'>{quantity_to_add_html}</div>
+                <div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>
+             """
     else:
         resp_str = f"""
             <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
@@ -203,12 +228,13 @@ def basket_view(request):
     basket_context = get_basket_context(resp.data)
     checkout_methods = CheckoutViewSet.as_view({"get": "list"})(request)
     payment_methods = checkout_methods.data["payment_methods"]
+    shipping_methods = [("collect", "Collect in store"), ("deliver", "Delivery")]
     for method in payment_methods:
         method["help"] = PAYMENT_METHOD_DESCRIPTIONS[method["identifier"]]
     return render(
         request,
         "shop/basket.html",
-        {**basket_context, "payment_methods": payment_methods, "hide_basket": True},
+        {**basket_context, "payment_methods": payment_methods, "shipping_methods": shipping_methods, "hide_basket": True},
     )
 
 
@@ -230,10 +256,13 @@ def _get_basket_quantity(basket):
 
 def checkout_view(request):
     payment_method = request.GET["payment-method"]
-    context = {"payment_method": payment_method}
-
+    shipping_method = request.GET["shipping-method"]
+    context = {"payment_method": payment_method, "shipping_method": shipping_method}
+    
     if request.method == "POST":
-        form = CheckoutForm(payment_method=payment_method, data=request.POST)
+
+        form = CheckoutForm(payment_method=payment_method, shipping_method=shipping_method, data=request.POST)
+
         if form.is_valid():
             checkout = CheckoutViewSet.as_view({"post": "create"})(request)
 
@@ -248,23 +277,17 @@ def checkout_view(request):
                 )
             context["checkout_error"] = True
     else:
-        form = CheckoutForm(payment_method=payment_method)
+        # update basket with shipping method
+        basket = Basket.objects.get(id=get_basket(request)["id"])
+        basket.shipping_method = shipping_method
+        basket.save()
+        form = CheckoutForm(payment_method=payment_method, shipping_method=shipping_method)
 
     request.method = "GET"
     resp = BasketViewSet.as_view({"get": "list"})(request)
     context = {**context, "form": form, **get_basket_context(resp.data)}
 
     return render(request, "shop/checkout.html", context)
-
-
-def copy_shipping_address(request):
-    billing_address_html = (
-        '<label for="id_billing_address" class=" requiredField">Billing address<span class="asteriskField">*</span> </label>'
-        '<textarea name="billing_address" cols="40" rows="6" class="textarea form-control" required="" id="id_billing_address">'
-        f'{request.GET["shipping_address"]}'
-        "</textarea>"
-    )
-    return HttpResponse(billing_address_html)
 
 
 def new_order_view(request, token):
@@ -293,5 +316,6 @@ def _order_status(request, token, new=False):
         order["date_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
     )
     order = get_basket_context(order)["basket"]
-    context = {"order": order, "new_order": new, "hide_basket": True}
+    shipping_method = SHIPPING_METHODS[order["shipping_method"]]
+    context = {"order": order, "new_order": new, "hide_basket": True, "shipping_method": shipping_method}
     return render(request, "shop/order_status.html", context)

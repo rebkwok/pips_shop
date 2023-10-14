@@ -14,27 +14,26 @@
                 <div class="alert-danger">There was an error submitting this order</div>
                 {% endif %}
                 {% if basket.items %}
-                <h3>Order Summary</h3>
-                {% for product_identifier, items in basket.items.items %}
-                        <div id="row-{{ product_identifier}}">
-                            <h4>{{ items.0.product_type }} ({{ items.0.category }})</h4>
-                            <div>    
+                    <h3 class="mt-4">Order Summary</h3> 
+                    {% for product_identifier, items in basket.items.items %}
+                        <h4>{{ items.0.product_type }} ({{ items.0.category }})</h4>
+                        <div class="row">
                             {% for item in items %}
-                            <div id="row-{{ item.product_id }}">
-                                <div>{{ item.product.name }} (<span id="quantity_{{ item.product_id }}">{{ item.quantity }}</span>) -  
-                                    £<span id="subtotal_{{ item.product_id }}">{{ item.subtotal }}</span>
-                                </div>
-                            </div>
+                                <div class="col">{{ item.product.name }} (<span id="quantity_{{ item.product_id }}">{{ item.quantity }}</span>)</div>
+                                <div class="col">£{{ item.subtotal }}</div>
                             {% endfor %}
                         </div>
-                        </div>
                     {% endfor %}
+
+                    {% include "shop/includes/basket_extra.html" with extra_rows=basket.extra_rows is_checkout=True %}
                     
+                    <hr class="mt-2 mb-2"/>
+
                     <div class="mt-4"><h4>Total: £<span id="total">{{ basket.total }}</span></h4></div>
                     
                     <hr class="mt-4 mb-4"/>
 
-                    <h3>Shipping & Billing details</h3>
+                    <h3>Your details</h3>
                     <div class="col-md-12 mt-4">
                         {% if form.errors %}
                             <p class="text-danger">Please correct the errors below:</p>
