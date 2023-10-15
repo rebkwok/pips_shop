@@ -65,6 +65,7 @@
                     hx-include="[id='id_quantity_{{ product.id }}'],[name='product_id']"  
                 >+</span>
             </div>
+            <div class="input-group">
             <input type="submit" 
                 class="btn basket-btn mt-2"
                 value="Add to basket"
@@ -72,6 +73,7 @@
                 hx-trigger="click"
                 hx-target="#basket-icon"
             >  
+            </div>
         </div>
         {% endif %}
         <input type="hidden" name="product_type" value="shop.ProductVariant">
