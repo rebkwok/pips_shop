@@ -70,23 +70,28 @@ def get_basket_item(basket, product_id):
     )
 
 def can_increase_quantity(request, variant, value, in_basket=False):
+    # value is the amount we want to increase TO
     if in_basket:
         # increasing a value from the basket; current basket quantity 
         # is already incorporated into stock numbers
         # we need to check the actual basket quantity because user may have increase/decreased
         # value in the form field without actually updating
         current_quantity = get_basket_item(get_basket(request), variant.id).get("quantity", 0)
+        logger.info("Current quantity %s", current_quantity)
+        logger.info("Stock %s", variant.stock)
+        logger.info("New quantity %s", variant.stock)
         stock_excluding_current_basket = variant.stock + current_quantity
-        new_quantity = value + 1
-        return (stock_excluding_current_basket - new_quantity) >= 0
+        return (stock_excluding_current_basket - value) >= 0
     else:
-        return variant.stock - (value + 1) >= 0
+        return (variant.stock - value) >= 0
 
 def increase_quantity(request, product_id):
     variant = ProductVariant.objects.get(id=int(product_id))
     value = int(request.GET.get("quantity", 1))
     in_basket = request.GET.get("ref") == "basket"
-    can_increase = can_increase_quantity(request, variant, value, in_basket)
+    # We click on this to increase the quantity from its current value
+    # check that we can increase to this value plus 1
+    can_increase = can_increase_quantity(request, variant, value + 1, in_basket)
     if can_increase:
         value += 1
     return _change_quantity(request, product_id, value, can_increase=can_increase)
@@ -112,11 +117,14 @@ def _change_quantity(request, product_id, new_value, can_increase=True):
 
 
 def add_to_basket(request, product_id):
-    # quantity being added; we will decrease the stock by the same amount
     variant = ProductVariant.objects.get(id=product_id)
     # check we can increase
+
+    # add_to_basket is called from the shop page, not the basket page; we're
+    # adding this entire quantity to the basket, but we're not incrementing 
+    # it, so just check we can add the current quantity
     can_increase = can_increase_quantity(
-        request, variant, int(request.POST.get("quantity")), in_basket=True
+        request, variant, int(request.POST.get("quantity")), in_basket=False
     )        
     
     if can_increase:
