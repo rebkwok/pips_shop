@@ -1,5 +1,6 @@
 from datetime import datetime
 from urllib.parse import parse_qsl, urlparse, urlunparse
+import logging
 
 import requests
 from django.http import HttpResponse, HttpResponseRedirect
@@ -15,6 +16,8 @@ from .forms import CheckoutForm
 from .models import ProductCategory, ProductVariant, Product, SHIPPING_METHODS
 from .payment import PAYMENT_METHOD_DESCRIPTIONS
 
+
+logger = logging.getLogger(__name__)
 
 Basket = get_salesman_model("Basket")
 
@@ -116,30 +119,37 @@ def add_to_basket(request, product_id):
         request, variant, int(request.POST.get("quantity")), in_basket=True
     )
 
-    if resp.status_code == 201 and can_increase:
-        request.method = "GET"
-        new_basket_quantity = get_basket_quantity(request)
-        resp_str = f"""
-            <div>{_basket_icon_html(request, new_basket_quantity)}</div>
-            <div id='added_{product_id}' class='alert-success mt-2' hx-swap-oob='true'>Added!</div>
-        """
-        if variant.product.out_of_stock():
-            resp_str += "<div id='change_quantity_wrapper' hx-swap-oob='true'></div>"
-        else:
-            # update variant dropdown
-            variant_html = render_to_string(
-                "shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request
-            )
-            # set quantity back to 1
-            quantity_to_add_html = render_to_string(
-                "shop/includes/quantity_field.html", {"product_id": product_id, "value": 1}, request
-                )
+    new_basket_quantity = get_basket_quantity(request)
+    resp_str = f"<div>{_basket_icon_html(request, new_basket_quantity)}</div>"
+    if resp.status_code == 201:
+        if can_increase:
             resp_str += f"""
-                <div id='id_quantity_wrapper_{ product_id }' hx-swap-oob='true'>{quantity_to_add_html}</div>
-                <div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>
-             """
+                <div id='added_{product_id}' class='alert-success mt-2' hx-swap-oob='true'>Added!</div>
+            """
+            if variant.product.out_of_stock():
+                resp_str += "<div id='change_quantity_wrapper' hx-swap-oob='true'></div>"
+            else:
+                # update variant dropdown
+                variant_html = render_to_string(
+                    "shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request
+                )
+                # set quantity back to 1
+                quantity_to_add_html = render_to_string(
+                    "shop/includes/quantity_field.html", {"product_id": product_id, "value": 1}, request
+                    )
+                resp_str += f"""
+                    <div id='id_quantity_wrapper_{ product_id }' hx-swap-oob='true'>{quantity_to_add_html}</div>
+                    <div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>
+                """
+        else:
+            logger.error("Error adding to basket: can't increase quantity")
+            new_basket_quantity = get_basket_quantity(request)
+            resp_str += f"""
+            <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
+            """
     else:
-        resp_str = f"""
+        logger.error("Error adding to basket: status_code %s resp %s", resp.status_code, resp.data)
+        resp_str += f"""
             <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
             """
     return HttpResponse(resp_str)
