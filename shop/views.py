@@ -58,8 +58,11 @@ def decrease_quantity(request, product_id):
 
 
 def get_basket_item(basket, product_id):
+    if not basket["items"]:
+        return {}
     return next(
-        item for item in basket["items"] if item["product_id"] == int(product_id)
+        (item for item in basket["items"] if item["product_id"] == int(product_id)),
+        {}
     )
 
 
@@ -69,7 +72,7 @@ def can_increase_quantity(request, variant, value, in_basket=False):
         # is already incorporated into stock numbers
         # we need to check the actual basket quantity because user may have increase/decreased
         # value in the form field without actually updating
-        current_quantity = get_basket_item(get_basket(request), variant.id)["quantity"]
+        current_quantity = get_basket_item(get_basket(request), variant.id).get("quantity", 0)
         stock_excluding_current_basket = variant.stock + current_quantity
         new_quantity = value + 1
         return (stock_excluding_current_basket - new_quantity) >= 0
@@ -165,7 +168,7 @@ def update_quantity(request, ref):
                 {"extra_rows": basket["extra_rows"]},
                 request,
             )
-            subtotal = get_basket_item(basket, product_id)["subtotal"]
+            subtotal = get_basket_item(basket, product_id).get("subtotal", 0)
             result_html = f"""
                 <span id='subtotal_{product_id}' hx-swap-oob='true'>{subtotal}</span>
                 <span id='quantity_{product_id}' hx-swap-oob='true'>{resp.data['quantity']}</span>
