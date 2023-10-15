@@ -56,7 +56,7 @@ else:  # pragma: no cover
     DEBUG = False
 
 
-DOMAIN = "shop.thewatermelonstudio.co.uk"
+DOMAIN = env.str("DOMAIN")
 ALLOWED_HOSTS = [
     DOMAIN, 
     f'www.{DOMAIN}', 
