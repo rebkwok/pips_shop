@@ -122,11 +122,12 @@ def post_delete_item(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Basket)
 def post_delete_item(sender, instance, **kwargs):
-    matching_order = Order.objects.filter(_extra__basket_id=instance.extra["basket_id"])
-    if matching_order.exists():
-        order = matching_order.first()
-        # basket deleted post-order creation, items from basket have been replaced
-        # in stock, so we need to update the stock based on the order items
-        for item in order.get_items():
-            item.product.stock -= item.quantity
-            item.product.save()
+    if "basket_id" in instance.extra:
+        matching_order = Order.objects.filter(_extra__basket_id=instance.extra["basket_id"])
+        if matching_order.exists():
+            order = matching_order.first()
+            # basket deleted post-order creation, items from basket have been replaced
+            # in stock, so we need to update the stock based on the order items
+            for item in order.get_items():
+                item.product.stock -= item.quantity
+                item.product.save()
