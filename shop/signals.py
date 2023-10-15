@@ -30,7 +30,7 @@ def send_notification(sender, order, new_status, old_status, **kwargs):
     """
     Send notification to customer when order is moved to completed.
     """
-    status_url = f'{settings.DOMAIN}{reverse("shop:order_status_view", args=(order.token,))}'
+    status_url = f'{settings.DOMAIN}{reverse("shop:order_status", args=(order.token,))}'
     if new_status in [order.Status.COMPLETED, order.Status.PROCESSING]:
         reply_to, _ = get_email_settings()
         if new_status == order.Status.COMPLETED:
@@ -62,7 +62,7 @@ def send_new_order_notifications(sender, instance, created, **kwargs):
     """
     Send notification to customer when order is first created
     """
-    status_url = f'{settings.DOMAIN}{reverse("shop:order_status_view", args=(instance.token,))}'
+    status_url = f'{settings.DOMAIN}{reverse("shop:order_status", args=(instance.token,))}'
     if created:
         notify_emails, reply_to = get_email_settings()
 
