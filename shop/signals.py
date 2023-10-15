@@ -8,7 +8,7 @@ from django.urls import reverse
 from salesman.core.utils import get_salesman_model
 from salesman.orders.signals import status_changed
 
-from .models import ShopSettings
+from .models import ShopSettings, ProductVariant
 
 
 BasketItem = get_salesman_model("BasketItem")
@@ -131,3 +131,10 @@ def post_delete_item(sender, instance, **kwargs):
             for item in order.get_items():
                 item.product.stock -= item.quantity
                 item.product.save()
+
+
+@receiver(post_save, sender=ProductVariant)
+def update_price(sender, instance, **kwargs):
+    if not instance.price:
+        instance.price = instance.product.price
+        instance.save()

@@ -21,7 +21,7 @@ each detail view
 
 /* CSS Variables */
 :root {
-  --wm-blue: #333;
+  --dark-blue: #333;
   --grey: #6e6e6e;
   --border-grey: #e1dcd3;
   --transparent-border: rgb(135 116 79 / 25%);
@@ -29,10 +29,11 @@ each detail view
   --cream: #f5f3e9;
   --light-brown: #87744f;
   --mid-brown: #825600;
-  --wm-blue: #553801;
+  --dark-brown: #553801;
   --orange: #c55302;
-  --wm-blue: #833701;
+  --dark-orange: #833701;
   --wm-pink: #F08BA5;
+  --wm-pink-transparent: rgb(240 139 165 / 50%);
   --wm-blue: #00557F;
   --font--primary: 'Aerial', sans-serif;
   /* stylelint-disable */
@@ -369,7 +370,7 @@ figure img {
 }
 
 .hero__title {
-  background-color: rgba(207,148,131, 0.7);
+  background-color: var(--wm-pink-transparent);
   width: max-content;
   max-width: 90%;
   font-size: 2.875rem;
@@ -386,7 +387,7 @@ figure img {
 
 @media (min-width: 768px) {
     .hero__title {
-      background-color: rgba(207,148,131, 0.7);
+      background-color: var(--wm-pink-transparent);
       width: max-content;
       max-width: 100%;
       font-size: 6.25rem;
@@ -779,7 +780,7 @@ blockquote .attribute-name {
 }
 
 a.navigation__logo > img {
-  width: 50px;
+  width: 200px;
   display: inline-block;
 }
 
@@ -1500,7 +1501,7 @@ input[type='radio'] {
 
 /* #region -- Body -- */
 .homepage .streamfield {
-  background-color: var(--wm-pink);
+  background-color: var(--wm-pink-transparent);
   color: var(--white);
 }
 

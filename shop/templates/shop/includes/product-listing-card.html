@@ -1,9 +1,11 @@
 {% load wagtailcore_tags wagtailimages_tags static %}
 
 <div>
-    <h3 class="listing-card__title">{{ product.name }}</h3>
-    {% if product.images %}
+    <h4 class="listing-card__title">{{ product.name }}</h4>
 
+    <div class="mb-4">
+    <a href="{% url 'shop:product_detail' product.id %}">
+    {% if product.images %}
         <div id="shopCarousel" class="carousel shop-carousel slide" data-ride="carousel">
             {% if product.images|length > 1 %}
                 <ol class="carousel-indicators">
@@ -30,7 +32,8 @@
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No photo available</div>
         </figure>
     {% endif %}
-    <p>{{ product.description|richtext }}</p>
+    </a>
+</div>
 
     <form class="shop-form" action="" method="POST">
         {% csrf_token %}

@@ -1,0 +1,22 @@
+{% extends "shop/base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+
+{% block content %}
+    {% include "shop/includes/header-hero.html" %}
+
+    <div class="container category-detail">
+        <div class="row">            
+            <div class="col-md-12">
+                <div class="container product-listing-card__container pt-2">
+                    <div class="product-listing-card__grid">
+                        {% include "shop/includes/product-listing-card.html" %}
+                    </div>
+                </div>
+                <div class="container product-listing-card__container pt-0">
+                    <p>{{ product.description|richtext }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

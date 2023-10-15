@@ -4,8 +4,7 @@
     <div class="container">
         <div class="navigation" data-navigation>
             <a href="/" class="navigation__logo">
-                <img src="{% static 'images/logo.png' %}" alt="The Watermelon Studio logo" />
-                The Watermelon Studio Shop
+                <img src="{% static 'images/logo_with_text.png' %}" alt="The Watermelon Studio logo" />
             </a>
             <button
                 type="button"
@@ -20,7 +19,7 @@
             </button>
 
             <nav class="navigation__mobile" data-mobile-navigation hidden>
-                <a href="/" class="navigation__logo">The Watermelon Studio Shop</a>
+                <a href="/" class="navigation__logo"></a>
                 <ul class="navigation__items nav-pills">
                     {# main_menu is defined in base/templatetags/navigation_tags.py #}
                     {% get_site_root as site_root %}

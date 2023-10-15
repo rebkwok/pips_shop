@@ -22,7 +22,7 @@
         <meta property="og:url" content="{{ request.build_absolute_uri }}" />
         <meta property="og:title" content="{% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}" />
         <meta property="og:description" content="{% if page.search_description %}{{ page.search_description }}{% endif %}" />
-        <meta property="og:image" content="{% static 'images/logo.png' %}" />
+        <meta property="og:image" content="{% static 'images/logo_with_text.png' %}" />
 
         {# Force all links in the live preview panel to be opened in a new tab #}
         {% if request.in_preview_panel %}

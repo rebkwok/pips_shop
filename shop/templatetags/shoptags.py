@@ -16,6 +16,7 @@ def shop_breadcrumbs(context):
         "order": "Order Status",
         "basket": "Basket",
         "checkout": "Checkout",
+
     }
 
     match = re.match(r"^/shop/(?P<current_page>\w+)/.*", context.request.path)
@@ -23,6 +24,8 @@ def shop_breadcrumbs(context):
         current_page = match.groups("current_page")[0]
         if current_page == "category":
             this_page = context["category"].name
+        elif current_page == "product":
+            this_page = context["product"].name
         else:
             this_page = path_to_current_page[current_page]
     else:

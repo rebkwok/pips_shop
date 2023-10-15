@@ -3,6 +3,7 @@ from django.db import models, transaction
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import slugify
+from django.utils.safestring import mark_safe
 from salesman.basket.models import BaseBasket, BaseBasketItem
 from salesman.orders.models import (
     BaseOrder,
@@ -10,14 +11,15 @@ from salesman.orders.models import (
     BaseOrderNote,
     BaseOrderPayment,
 )
-from wagtail.admin.panels import FieldPanel
+from modelcluster.models import ClusterableModel, ParentalKey
+from wagtail.admin.panels import FieldPanel, InlinePanel, HelpPanel
 from wagtail.contrib.forms.models import validate_to_address
 from wagtail.contrib.settings.models import (
     BaseGenericSetting,
     register_setting,
 )
 from wagtail.fields import RichTextField
-from wagtail.models import Page
+from wagtail.models import Page, Orderable
 
 
 # ORDERS
@@ -133,9 +135,9 @@ class ProductCategory(models.Model):
             .order_by("index")
             .distinct()
         )
+    
 
-
-class Product(models.Model):
+class Product(ClusterableModel):
     """
     Product, used to subgroup products in display.
     ProductVariant is the actual product that gets added to basket.
@@ -155,12 +157,50 @@ class Product(models.Model):
         help_text="Images can be added to product and/or product variants, all will be displayed",
     )
     description = RichTextField(help_text="Description of the product", blank=True)
+    price = models.DecimalField(
+        max_digits=18, decimal_places=2, default=10, 
+        help_text="Default price for this product. Can be overridden by setting price on individual variants."
+    ) 
     index = models.PositiveIntegerField(
         default=100, help_text="Used for ordering products on the category page"
     )
     live = models.BooleanField(
         default=True, help_text="Display this product in the shop"
     )
+
+    panels = [
+        HelpPanel(
+            """
+            A Product is an item for sale; it has a name and a description.
+            
+            Product variants represent the actual items that are sold, and may have attributes e.g. size
+            and colour. Each product must have at least one variant in order to be available for sale.
+            """
+        ),
+        FieldPanel('category'),
+        FieldPanel('name'),
+        FieldPanel('image'),
+        FieldPanel("price"),
+        FieldPanel('description'),
+        FieldPanel('index'),
+        FieldPanel('live'),
+        InlinePanel(
+            "variants", heading="Product variants", label="Variant", 
+            help_text=mark_safe("""A variant represents a single item that can be ordered/purchased. E.g.
+            A product 'Pen' might have variants 'Single', 'Pack of 5', 'Pack of 10'.<br/>
+            Can be left blank if there is only one variant for this product, or if it
+            only varies by colour and/or size.<br/> 
+            e.g.
+            <ul>
+            <li>Product Mug: one product variant, with no name, colour or size specifications.</li>
+            <li>Product T-shirt: size/colour variants with no separate name (e.g. black,S)</li>
+            <li>Product Hoodie: variants with name "Men's Hoodie", "Women's Hoodie", each 
+              with size and colour options</li>
+            </ul>
+            Use the arrows to reorder items.
+            """)
+        ),
+    ]
 
     def __str__(self):
         return self.name
@@ -189,7 +229,7 @@ class Product(models.Model):
         for variant in self.live_variants.filter(image__isnull=False):
             all_images.append(variant.image)
         return all_images
-
+        
 
 class Size(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -205,25 +245,15 @@ class Colour(models.Model):
         return self.name
 
 
-class ProductVariant(models.Model):
-    product = models.ForeignKey(
+class ProductVariant(Orderable):
+    product = ParentalKey(
         Product, on_delete=models.CASCADE, related_name="variants"
     )
     variant_name = models.CharField(
         null=True, blank=True,
         max_length=255,
         verbose_name="Variant name",
-        help_text="""
-            A variant represents a single item that can be ordered/purchased. E.g.
-            A product 'Pen' might have variants 'Single', 'Pack of 5', 'Pack of 10'.
-            Can be left blank if there is only one variant for this product, or if it
-            only varies by colour and/or size. 
-            e.g. 
-            - Product Mug: one product variant, with no name, colour or size specifications.
-            - Product T-shirt: size/colour variants with no separate name (e.g. black,S)
-            - Product Hoodie: variants with name "Men's Hoodie", "Women's Hoodie", each 
-              with size and colour options
-        """,
+        help_text="Can be left blank if there is only one variant for this product.",
     )
     image = models.ForeignKey(
         "wagtailimages.Image",
@@ -232,7 +262,10 @@ class ProductVariant(models.Model):
         on_delete=models.SET_NULL,
         related_name="+",
     )
-    price = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    price = models.DecimalField(
+        null=True, blank=True, max_digits=18, decimal_places=2,
+        help_text="Leave blank to use default product price."
+    )
     stock = models.IntegerField(default=1, help_text="Quantity of this item currently in stock")
     live = models.BooleanField(
         default=True, help_text="Display this product variant in the shop"
@@ -283,7 +316,7 @@ class ProductVariant(models.Model):
 
     get_category.admin_order_field = "product__category"
     get_category.short_description = "Category"
-
+    
     @property
     def code(self):
         return str(self.id)

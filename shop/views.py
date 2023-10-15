@@ -12,7 +12,7 @@ from salesman.checkout.views import CheckoutViewSet
 from salesman.core.utils import get_salesman_model
 
 from .forms import CheckoutForm
-from .models import ProductCategory, ProductVariant, SHIPPING_METHODS
+from .models import ProductCategory, ProductVariant, Product, SHIPPING_METHODS
 from .payment import PAYMENT_METHOD_DESCRIPTIONS
 
 
@@ -44,10 +44,11 @@ class ProductCategoryDetailView(DetailView):
     template_name = "shop/shop_category_page.html"
     context_object_name = "category"
 
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data["basket_quantity"] = get_basket_quantity(self.request)
-        return context_data
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "shop/shop_product_page.html"
+    context_object_name = "product"
 
 
 def decrease_quantity(request, product_id):        
@@ -64,7 +65,6 @@ def get_basket_item(basket, product_id):
         (item for item in basket["items"] if item["product_id"] == int(product_id)),
         {}
     )
-
 
 def can_increase_quantity(request, variant, value, in_basket=False):
     if in_basket:
