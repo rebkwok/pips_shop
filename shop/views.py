@@ -65,7 +65,7 @@ def get_basket_item(basket, product_id):
     if not basket["items"]:
         return {}
     return next(
-        (item for item in basket["items"] if item["product_id"] == int(product_id)),
+        (item for item in basket["items"] if int(item["product_id"]) == int(product_id)),
         {}
     )
 
