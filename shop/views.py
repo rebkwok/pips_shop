@@ -113,16 +113,17 @@ def _change_quantity(request, product_id, new_value, can_increase=True):
 
 def add_to_basket(request, product_id):
     # quantity being added; we will decrease the stock by the same amount
-    resp = BasketViewSet.as_view({"post": "create"})(request)
     variant = ProductVariant.objects.get(id=product_id)
+    # check we can increase
     can_increase = can_increase_quantity(
         request, variant, int(request.POST.get("quantity")), in_basket=True
-    )
-
-    new_basket_quantity = get_basket_quantity(request)
-    resp_str = f"<div>{_basket_icon_html(request, new_basket_quantity)}</div>"
-    if resp.status_code == 201:
-        if can_increase:
+    )        
+    
+    if can_increase:
+        resp = BasketViewSet.as_view({"post": "create"})(request)
+        new_basket_quantity = get_basket_quantity(request)
+        resp_str = f"<div>{_basket_icon_html(request, new_basket_quantity)}</div>"
+        if resp.status_code == 201:
             resp_str += f"""
                 <div id='added_{product_id}' class='alert-success mt-2' hx-swap-oob='true'>Added!</div>
             """
@@ -142,16 +143,18 @@ def add_to_basket(request, product_id):
                     <div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>
                 """
         else:
-            logger.error("Error adding to basket: can't increase quantity")
-            new_basket_quantity = get_basket_quantity(request)
+            logger.error("Error adding to basket: status_code %s resp %s", resp.status_code, resp.data)
             resp_str += f"""
-            <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
-            """
+                <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
+                """
     else:
-        logger.error("Error adding to basket: status_code %s resp %s", resp.status_code, resp.data)
+        logger.error("Error adding to basket: can't increase quantity")
+        basket_quantity = get_basket_quantity(request)
+        resp_str = f"<div>{_basket_icon_html(request, basket_quantity)}</div>"
         resp_str += f"""
-            <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
-            """
+        <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
+        """
+    
     return HttpResponse(resp_str)
 
 
