@@ -6,10 +6,12 @@ from django.views.decorators.csrf import csrf_exempt
 
 from salesman.checkout.payment import PaymentMethod
 from salesman_stripe.payment import StripePayment
+from salesman.core.utils import get_salesman_model
 
 import stripe
 
-from shop.models import Order
+
+Order = get_salesman_model("Order")
 
 
 PAYMENT_METHOD_DESCRIPTIONS = {
