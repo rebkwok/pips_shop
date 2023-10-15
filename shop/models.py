@@ -229,20 +229,6 @@ class Product(ClusterableModel):
         for variant in self.live_variants.filter(image__isnull=False):
             all_images.append(variant.image)
         return all_images
-        
-
-class Size(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
-    
-
-class Colour(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
 
 
 class ProductVariant(Orderable):
@@ -271,8 +257,8 @@ class ProductVariant(Orderable):
         default=True, help_text="Display this product variant in the shop"
     )
 
-    colour = models.ForeignKey(Colour, null=True, blank=True, on_delete=models.SET_NULL)
-    size = models.ForeignKey(Size, null=True, blank=True, on_delete=models.SET_NULL)
+    colour = models.CharField(null=True, blank=True)
+    size = models.CharField(null=True, blank=True)
 
     class Meta:
         unique_together = ("variant_name", "colour", "size")
@@ -292,11 +278,11 @@ class ProductVariant(Orderable):
         if name and (self.colour or self.size):
             name += " - "
         if self.colour:
-            name += str(self.colour)
+            name += self.colour
             if self.size:
                 name += ", "
         if self.size:
-            name += str(self.size)
+            name += self.size
         return name
 
     def get_price(self, request):

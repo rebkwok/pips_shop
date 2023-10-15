@@ -6,22 +6,10 @@ from wagtail.contrib.modeladmin.options import modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
 
-from .models import Product, ProductCategory, ProductVariant, Colour, Size
+from .models import Product, ProductCategory, ProductVariant
 
 
 Order = get_salesman_model("Order")
-
-
-class ColourViewSet(SnippetViewSet):
-    model = Colour
-    list_display = ("name",)
-    list_filter = ("name",)
-
-
-class SizeViewSet(SnippetViewSet):
-    model = Size
-    list_display = ("name",)
-    list_filter = ("name",)
 
 
 class ProductCategoryViewSet(SnippetViewSet):
@@ -54,12 +42,6 @@ class ProductGroup(SnippetViewSetGroup):
     items = (ProductCategoryViewSet, ProductViewSet, ProductVariantViewSet)
 
 
-class OptionsGroup(SnippetViewSetGroup):
-    menu_label = "Product Options"
-    menu_icon = "pick"
-    items = (SizeViewSet, ColourViewSet)
-
-
 class OrderAdmin(SalesmanOrderAdmin):
     SalesmanOrderAdmin.list_display.insert(2, "name")
     SalesmanOrderAdmin.list_display.insert(4, "shipping_method")
@@ -68,6 +50,5 @@ class OrderAdmin(SalesmanOrderAdmin):
     SalesmanOrderAdmin.default_panels[2].children.insert(3, ReadOnlyPanel("shipping_method"))
 
 
-register_snippet(OptionsGroup)
 register_snippet(ProductGroup)
 modeladmin_register(OrderAdmin)

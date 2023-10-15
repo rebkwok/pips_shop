@@ -56,10 +56,10 @@ def test_product_variant_str(product, variant_name, colour, size, expected_str, 
         price=10
     )
     if colour:
-        variant.colour = baker.make("shop.Colour", name=colour)
+        variant.colour = colour
         variant.save()
     if size:
-        variant.size = baker.make("shop.Size", name=size)
+        variant.size = size
         variant.save()
     
     assert str(variant) == expected_str
