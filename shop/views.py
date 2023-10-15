@@ -79,10 +79,13 @@ def can_increase_quantity(request, variant, value, in_basket=False):
         current_quantity = get_basket_item(get_basket(request), variant.id).get("quantity", 0)
         logger.info("Current quantity %s", current_quantity)
         logger.info("Stock %s", variant.stock)
-        logger.info("New quantity %s", variant.stock)
+        logger.info("New quantity %s", value)
         stock_excluding_current_basket = variant.stock + current_quantity
         return (stock_excluding_current_basket - value) >= 0
     else:
+        logger.info("Variant %s", variant)
+        logger.info("Stock %s", variant.stock)
+        logger.info("New quantity %s", value)
         return (variant.stock - value) >= 0
 
 def increase_quantity(request, product_id):
