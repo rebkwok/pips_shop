@@ -246,7 +246,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 # Email
-if env("LOCAL") or env("CI"):
+if env("LOCAL") or env("CI") or env("TESTING"):
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:  # pragma: no cover
     EMAIL_BACKEND = "django_ses.SESBackend"
@@ -394,7 +394,7 @@ WAGTAILSEARCH_BACKENDS = {
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL")
+WAGTAILADMIN_BASE_URL = f'https://{DOMAIN}'
 
 
 WAGTAILIMAGES_JPEG_QUALITY = 65
