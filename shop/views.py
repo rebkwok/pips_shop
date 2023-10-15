@@ -145,7 +145,7 @@ def add_to_basket(request, product_id):
                 <div id='added_{product_id}' class='alert-success mt-2' hx-swap-oob='true'>Added!</div>
             """
             if variant.product.out_of_stock():
-                resp_str += "<div id='change_quantity_wrapper' hx-swap-oob='true'></div>"
+                resp_str += f"<div id='change_quantity_wrapper_{{ product_id }}' hx-swap-oob='true'></div>"
             else:
                 # update variant dropdown
                 variant_html = render_to_string(

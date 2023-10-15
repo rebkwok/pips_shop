@@ -43,7 +43,7 @@
         </div>
         
         {% if not product.out_of_stock %}
-        <div id="change_quantity_wrapper" class="input-group quantity mb-3">
+        <div id="change_quantity_wrapper_{{ product.id }}" class="input-group quantity mb-3">
             <div class="input-group-prepend">
                 <span 
                     class="input-group-text"
@@ -66,7 +66,7 @@
                 >+</span>
             </div>
             <input type="submit" 
-                class="btn basket-btn"
+                class="btn basket-btn mt-2"
                 value="Add to basket"
                 hx-post="{% url 'shop:add_to_basket' product.id %}"
                 hx-trigger="click"
