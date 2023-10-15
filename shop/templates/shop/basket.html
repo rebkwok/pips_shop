@@ -19,14 +19,14 @@
                                 <div class="col">
                                     <form class="shop-form" action="" method="POST">
                                         {% csrf_token %}
-                                        <div class="input-group quantity mb-3">
+                                        <div class="input-group quantity mt-2 mb-1">
                                             <div class="input-group-prepend">
                                                 <span 
                                                     id="id_dec_wrapper_{{ item.product_id }}"
                                                     class="input-group-text"
                                                     hx-trigger="click"
                                                     hx-target="#id_quantity_wrapper_{{ item.product_id }}"
-                                                    hx-get="{% url 'shop:decrease_quantity' item.product_id %}?ref=basket"
+                                                    hx-get="{% url 'shop:decrease_quantity' item.product_id %}?ref=basket&product_id={{ item.product_id }}"
                                                     hx-include="[id='id_quantity_{{ item.product_id }}']"  
                                                 >-</span>
                                             </div>
@@ -39,7 +39,7 @@
                                                     class="input-group-text"
                                                     hx-trigger="click"
                                                     hx-target="#id_quantity_wrapper_{{ item.product_id }}"
-                                                    hx-get="{% url 'shop:increase_quantity' item.product_id %}?ref=basket"
+                                                    hx-get="{% url 'shop:increase_quantity' item.product_id %}?ref=basket&product_id={{ item.product_id }}"
                                                     hx-include="[id='id_quantity_{{ item.product_id }}']"  
                                                 >+</span>
                                             </div>

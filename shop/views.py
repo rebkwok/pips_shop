@@ -89,7 +89,11 @@ def can_increase_quantity(request, variant, value, in_basket=False):
         return (variant.stock - value) >= 0
 
 def increase_quantity(request, product_id):
-    variant = ProductVariant.objects.get(id=int(product_id))
+    # product_id in the URL is the PRODUCT
+    # product_id in GET is the variant
+    # We need to increase the variant; the +/- buttons on the shop page refer to product
+    variant_id = int(request.GET.get("product_id"))
+    variant = ProductVariant.objects.get(id=int(variant_id))
     value = int(request.GET.get("quantity", 1))
     in_basket = request.GET.get("ref") == "basket"
     # We click on this to increase the quantity from its current value
@@ -120,7 +124,9 @@ def _change_quantity(request, product_id, new_value, can_increase=True):
 
 
 def add_to_basket(request, product_id):
-    variant = ProductVariant.objects.get(id=product_id)
+    # product_id in the URL is the PRODUCT
+    # product_id in POST is the variant
+    variant = ProductVariant.objects.get(id=request.POST.get("product_id"))
     # check we can increase
 
     # add_to_basket is called from the shop page, not the basket page; we're
@@ -170,6 +176,8 @@ def add_to_basket(request, product_id):
 
 
 def update_quantity(request, ref):
+    # Called from basket
+    # Here product ID is the variant ID
     product_id = int(request.POST.get("product_id"))
     request.method = "GET"
     current_item_resp = BasketViewSet.as_view({"get": "retrieve"})(request, ref=ref)
