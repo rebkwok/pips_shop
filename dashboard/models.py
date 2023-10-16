@@ -27,6 +27,7 @@ class SocialSettings(ClusterableModel, BaseGenericSetting):
     twitter_url = models.URLField(verbose_name="Twitter URL", blank=True)
     facebook_url = models.URLField(verbose_name="Facebook URL", blank=True)
     instagram_url = models.URLField(verbose_name="Instagram URL", blank=True)
+    website_url = models.URLField(verbose_name="Website URL", blank=True)
 
     panels = [
         MultiFieldPanel(
@@ -34,6 +35,7 @@ class SocialSettings(ClusterableModel, BaseGenericSetting):
                 FieldPanel("twitter_url"),
                 FieldPanel("facebook_url"),
                 FieldPanel("instagram_url"),
+                FieldPanel("website_url"),
             ],
             "Social settings",
         )
