@@ -79,7 +79,8 @@ class BasketItem(BaseBasketItem):
     
     @property
     def name(self):
-        return self.product.name() if self.product else "(no name)"
+        # Note product here is a ProductVariant instance
+        return self.product.name if self.product else "(no name)"
 
 
 # PRODUCTS
