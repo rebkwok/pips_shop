@@ -316,6 +316,9 @@ class ShopPage(Page):
     def categories(self):
         return CategoryPage.objects.live().order_by("index")
 
+    def children(self):
+        return self.categories()
+
     def get_context(self, request):
         from .views import get_basket_quantity
 

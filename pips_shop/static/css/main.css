@@ -267,7 +267,7 @@ figure img {
   margin: 40px auto 0;
   max-width: 1400px;
   border-radius: 0;
-  background-color: rgba(207,148,131);
+  background-color: var(--wm-pink);
   color: var(--white);
   padding: 40px;
 }
@@ -334,13 +334,13 @@ figure img {
   width: 100%;
   height: 100%;
   bottom: 0;
-  background-image: url("/static/images/landscape.png");
+  background-image: url("/static/images/hero-footer.png");
   background-size: cover;
 }
 
 @media (min-width: 768px) {
   .hero-footer-mask {
-    background-image: url("/static/images/landscape.png");
+    background-image: url("/static/images/hero-footer.png");
     background-size: cover;
   }
 }
@@ -827,7 +827,7 @@ li.has-submenu a.allow-toggle {
 /* Custom page footer */
 hr {
   margin: 0;
-  border-top: 1px solid var(--light-brown);
+  border-top: 1px solid var(--wm-blue);
   opacity: 0.25;
 }
 
@@ -1545,7 +1545,7 @@ input[type='radio'] {
 
 @media (min-width: 992px) {
   .homepage .streamfield-column {
-    padding: 140px 0;
+    padding: 140px 20px;
   }
 
   .homepage .streamfield-column p:first-child {
@@ -1572,21 +1572,21 @@ input[type='radio'] {
 .homepage .promo h2 {
   margin-top: 0;
   margin-bottom: 20px;
-  color: var(--white);
+  color: var(--wm-blue);
 }
 
 .homepage .promo p,
 .homepage .promo li {
-  color: var(--white);
+  color: var(--wm-blue);
 }
 
 .homepage .promo a {
-  color: var(--white);
+  color: var(--wm-blue);
   text-decoration: underline;
 }
 
 .homepage .promo {
-  background: var(--light-brown);
+  background: var(--wm-pink-transparent);
   height: 100%;
   padding: 60px 40px;
   margin-top: 40px;
@@ -1598,16 +1598,31 @@ input[type='radio'] {
 }
 
 .homepage .promo figure img {
-  margin: 40px 0 -200px;
+  margin: 40px 0 -100px;
   width: 100%;
   height: auto;
+}
+
+@media (min-width: 576px) {
+  .homepage .promo {
+    margin-top: -180px;
+    margin-right: -120px;
+    padding: 180px 40px 20px;
+  }
+
+  .homepage .promo figure img {
+    width: calc(100% + 60px);
+    height: auto;
+    margin-right: -60px;
+    padding-top: 10px;
+  }
+
 }
 
 @media (min-width: 768px) {
   .homepage .promo {
     margin-top: -180px;
     margin-right: -120px;
-    padding: 180px 60px 40px;
   }
 
   .homepage .promo figure img {
@@ -1663,7 +1678,7 @@ input[type='radio'] {
   transform: translateX(5px);
 }
 
-.homepage .featured-cards__link:hover .featured-cards__chevron-icon path {
+.homepage .featured-cards__link:hover, .featured-cards__chevron-icon path {
   fill: var(--wm-pink);
 }
 

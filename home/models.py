@@ -2,7 +2,6 @@ import datetime
 
 from django.conf import settings
 from django.db import models
-from django.template.response import TemplateResponse
 from django.utils.formats import date_format
 
 from modelcluster.fields import ParentalKey
@@ -17,12 +16,9 @@ from wagtail.admin.panels import (
     PublishingPanel,
 )
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
-from wagtail.contrib.forms.views import SubmissionsListView
-from wagtail.contrib.forms.utils import get_field_clean_name
 from wagtail.fields import RichTextField
 from wagtail.models import (
     DraftStateMixin,
-    Orderable,
     Page,
     PreviewableMixin,
     RevisionMixin,
@@ -105,9 +101,9 @@ class HomePage(Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        help_text="First featured section for the homepage. Will display up to "
+        help_text="Featured section for the homepage. Will display up to "
         "three child items.",
-        verbose_name="Featured section 1",
+        verbose_name="Featured section",
     )
     featured_section_show_more_text = models.CharField(
         blank=True,
@@ -180,14 +176,20 @@ class HomePage(Page):
         blank=True,
         help_text="Text to display on the Footer link button",
     )
-    hero_footer_link = models.ForeignKey(
+    hero_footer_page = models.ForeignKey(
         "wagtailcore.Page",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        verbose_name="Hero CTA link",
+        verbose_name="Hero Footer page",
         help_text="Choose a page to link to for the Footer",
+    )
+    hero_footer_url= models.URLField(
+        null=True,
+        blank=True,
+        verbose_name="Hero Footer link",
+        help_text="Choose a URL to link to for the Footer. Ignored if footer page is set.",
     )
 
     content_panels = Page.content_panels + [
@@ -248,7 +250,8 @@ class HomePage(Page):
                 MultiFieldPanel(
                     [
                         FieldPanel("hero_footer"),
-                        FieldPanel("hero_footer_link"),
+                        FieldPanel("hero_footer_page"),
+                        FieldPanel("hero_footer_url"), 
                     ]
                 ),
             ],
