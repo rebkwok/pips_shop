@@ -1,7 +1,6 @@
 from django.urls import path
 
 from .views import (
-    ProductCategoryDetailView,
     ProductDetailView,
     add_to_basket,
     basket_view,
@@ -17,11 +16,6 @@ from .views import (
 
 app_name = "shop"
 urlpatterns = [
-    path(
-        "category/<pk>/",
-        ProductCategoryDetailView.as_view(),
-        name="productcategory_detail",
-    ),
     path(
         "product/<pk>/",
         ProductDetailView.as_view(),

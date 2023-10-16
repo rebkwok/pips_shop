@@ -22,6 +22,7 @@ ipython
 ruff
 black
 model_bakery
+wagtail-factories
 
 django-salesman[pygments]
 django-salesman-stripe

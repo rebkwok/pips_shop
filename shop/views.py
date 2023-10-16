@@ -13,7 +13,7 @@ from salesman.checkout.views import CheckoutViewSet
 from salesman.core.utils import get_salesman_model
 
 from .forms import CheckoutForm
-from .models import ProductCategory, ProductVariant, Product, SHIPPING_METHODS
+from .models import ProductVariant, Product, SHIPPING_METHODS
 from .payment import PAYMENT_METHOD_DESCRIPTIONS
 
 
@@ -40,12 +40,6 @@ def get_basket_total(request):
 
 def get_basket_quantity_and_total(request):
     return get_basket_quantity(request), get_basket(request)["total"]
-
-
-class ProductCategoryDetailView(DetailView):
-    model = ProductCategory
-    template_name = "shop/shop_category_page.html"
-    context_object_name = "category"
 
 
 class ProductDetailView(DetailView):

@@ -1,24 +1,45 @@
 import pytest
 from model_bakery import baker
+import wagtail_factories
 
+from ..models import CategoryPage, ShopPage
 
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture
-def category():
-    yield baker.make("shop.ProductCategory", name="Test Category")
+class CategoryPageFactory(wagtail_factories.PageFactory):
+    class Meta:
+        model = CategoryPage
+
+
+class ShopPageFactory(wagtail_factories.PageFactory):
+    class Meta:
+        model = ShopPage
 
 
 @pytest.fixture
-def product(category):
-    yield baker.make("shop.Product", name="Test Product", category=category)
+def root_page():
+    yield wagtail_factories.PageFactory(parent=None)
 
 
-def test_category(category):
-    assert str(category) == "Test Category"
-    assert category.get_product_count() == "0 live (0 total)"
-    assert list(category.live_products) == []
+@pytest.fixture
+def shop_page(root_page):
+    yield ShopPageFactory(parent=root_page)
+
+
+@pytest.fixture
+def category_page(shop_page):
+    yield CategoryPageFactory(parent=shop_page, title="Test Category")
+
+
+@pytest.fixture
+def product(category_page):
+    yield baker.make("shop.Product", name="Test Product", category_page=category_page)
+
+
+def test_category(category_page):
+    assert category_page.get_product_count() == "0 live (0 total)"
+    assert list(category_page.live_products) == []
 
 
 def test_product(product):
@@ -32,7 +53,7 @@ def test_product_variant(product):
     variant = baker.make("shop.ProductVariant", product=product, variant_name="Small", price=10)
     assert str(variant) == "Test Product - Small"
     assert variant.get_price(None) == 10
-    assert variant.category == product.category
+    assert variant.category_link() == product.category_link()
     assert variant.code == str(variant.id)
 
 
@@ -66,19 +87,19 @@ def test_product_variant_str(product, variant_name, colour, size, expected_str, 
     assert variant.name_and_price() == expected_name_and_price
 
 
-def test_live_products(category, product):
+def test_live_products(category_page, product):
     # product is live
     assert product.live
     # but has no variants yet
     assert not product.variants.exists()
     # so category live product count is still 0
-    assert category.live_products.count() == 0
+    assert category_page.live_products.count() == 0
 
     # make a not-live variant
     variant = baker.make(
         "shop.ProductVariant", product=product, variant_name="Small", price=10, live=False
     )
-    assert category.live_products.count() == 0
+    assert category_page.live_products.count() == 0
     assert product.variants.exists()
     assert product.live_variants.count() == 0
 
@@ -86,4 +107,4 @@ def test_live_products(category, product):
     variant.live = True
     variant.save()
     assert product.live_variants.count() == 1
-    assert category.live_products.count() == 1
+    assert category_page.live_products.count() == 1
