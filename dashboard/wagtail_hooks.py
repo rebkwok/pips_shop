@@ -17,14 +17,9 @@ class FooterTextViewSet(SnippetViewSet):
     menu_order = 400  # will put in 5th place (000 being 1st, 100 2nd)
 
 
-class CollectionMenuItem(MenuItem): 
-    def is_shown(self, request):
-        return request.user.is_superuser
-
-
 @hooks.register('register_admin_menu_item')
 def register_collections_menu_item():
-  return CollectionMenuItem('Collections', reverse('wagtailadmin_collections:index'), icon_name='folder-inverse', order=200)
+  return MenuItem('Collections', reverse('wagtailadmin_collections:index'), icon_name='folder-inverse', order=300)
 
 
 register_snippet(FooterTextViewSet)

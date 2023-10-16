@@ -34,6 +34,7 @@ class ProductGroup(SnippetViewSetGroup):
     menu_label = "Shop Stock"
     menu_icon = "pick"
     items = (ProductViewSet, ProductVariantViewSet)
+    menu_order = 200
 
 
 class OrderAdmin(SalesmanOrderAdmin):
@@ -42,6 +43,7 @@ class OrderAdmin(SalesmanOrderAdmin):
     SalesmanOrderAdmin.search_fields.append("name")
     SalesmanOrderAdmin.default_panels[2].children.insert(2, ReadOnlyPanel("name"))
     SalesmanOrderAdmin.default_panels[2].children.insert(3, ReadOnlyPanel("shipping_method"))
+    menu_order = 250
 
 
 register_snippet(ProductGroup)
