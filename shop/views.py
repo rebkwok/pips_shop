@@ -139,25 +139,29 @@ def add_to_basket(request, product_id):
     if can_increase:
         resp = BasketViewSet.as_view({"post": "create"})(request)
         new_basket_quantity = get_basket_quantity(request)
+        # refresh variant to ensure stock is up to date
+        variant.refresh_from_db()
         resp_str = f"<div>{_basket_icon_html(request, new_basket_quantity)}</div>"
         if resp.status_code == 201:
             resp_str += f"""
                 <div id='added_{product_id}' class='alert-success mt-2' hx-swap-oob='true'>Added!</div>
             """
+            # update variant dropdown, including out of stock message
+            variant_html = render_to_string(
+                "shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request
+            )
+            resp_str += f"<div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>"
+
             if variant.product.out_of_stock():
-                resp_str += f"<div id='change_quantity_wrapper_{{ product_id }}' hx-swap-oob='true'></div>"
+                # hide quantity change and add-to-basket button
+                resp_str += f"<div id='change_quantity_wrapper_{ product_id }' hx-swap-oob='true'></div>"
             else:
-                # update variant dropdown
-                variant_html = render_to_string(
-                    "shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request
-                )
                 # set quantity back to 1
                 quantity_to_add_html = render_to_string(
                     "shop/includes/quantity_field.html", {"product_id": product_id, "value": 1}, request
                     )
                 resp_str += f"""
                     <div id='id_quantity_wrapper_{ product_id }' hx-swap-oob='true'>{quantity_to_add_html}</div>
-                    <div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>
                 """
         else:
             logger.error("Error adding to basket: status_code %s resp %s", resp.status_code, resp.data)

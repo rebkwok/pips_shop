@@ -79,11 +79,43 @@ class BasketItem(BaseBasketItem):
     
     @property
     def name(self):
-        return self.product.get_full_name() if self.product else "(no name)"
+        return self.product.name() if self.product else "(no name)"
 
 
 # PRODUCTS
 
+
+class CategoryPage(Page):
+    body = RichTextField(
+        verbose_name="Page body",
+        blank=True,
+        help_text="Optional text to describe the category",
+    )
+    index = models.PositiveIntegerField(
+        default=100, help_text="Used for ordering categories on the shop page"
+    )
+
+    content_panels = Page.content_panels + [
+        FieldPanel("body"),
+        FieldPanel("index"),
+    ]
+
+    parent_page_types = ["ShopPage"]
+    subpage_types = ["CategoryPage"]
+
+    def get_product_count(self):
+        return f"{self.live_products.count()} live ({self.page_products.count()} total)"
+    get_product_count.short_description = "# products"
+
+    @property
+    def live_products(self):
+        # products are live if they are set to live AND have at least one live variant
+        return (
+            self.page_products.filter(live=True, variants__isnull=False, variants__live=True)
+            .order_by("index")
+            .distinct()
+        )
+    
 
 class ProductCategory(models.Model):
     """
@@ -142,7 +174,9 @@ class Product(ClusterableModel):
     Product, used to subgroup products in display.
     ProductVariant is the actual product that gets added to basket.
     """
-
+    category_page = ParentalKey(
+        CategoryPage, related_name="page_products", null=True, blank=True,
+    )
     category = models.ForeignKey(
         ProductCategory, on_delete=models.CASCADE, related_name="products"
     )
@@ -178,6 +212,7 @@ class Product(ClusterableModel):
             """
         ),
         FieldPanel('category'),
+        FieldPanel('category_page'),
         FieldPanel('name'),
         FieldPanel('image'),
         FieldPanel("price"),
@@ -219,7 +254,16 @@ class Product(ClusterableModel):
 
     @property
     def identifier(self):
+        if self.category_page:
+            return slugify(f"{self.category_page.title}-{self.name}")
         return slugify(f"{self.category.name}-{self.name}")
+
+    def category_link(self):
+        if self.category_page:
+            return mark_safe(
+                f"<a href={reverse('wagtailadmin_pages:edit', args=(self.category_page.id,))}>{self.category_page.title}</a>"
+            )
+    category_link.short_description = "Category"
 
     @property
     def images(self):
@@ -265,15 +309,15 @@ class ProductVariant(Orderable):
 
     def __str__(self):
         product_name = self.product.name
-        if self.name:
-            return f"{product_name} - {self.name}"
+        if self.variant_full_name():
+            return f"{product_name} - {self.variant_full_name()}"
         return product_name
-
-    def get_full_name(self):
-        return str(self)
 
     @property
     def name(self):
+        return str(self)
+
+    def variant_full_name(self):
         name = self.variant_name or ""
         if name and (self.colour or self.size):
             name += " - "
@@ -284,6 +328,7 @@ class ProductVariant(Orderable):
         if self.size:
             name += self.size
         return name
+    variant_full_name.short_description = "Variant name"
 
     def get_price(self, request):
         return self.price
@@ -293,15 +338,14 @@ class ProductVariant(Orderable):
             return f"{self.name} - £{self.price}"
         return f"£{self.price}"
 
-    @property
-    def category(self):
-        return self.product.category
-
-    def get_category(self):
-        return self.category
-
-    get_category.admin_order_field = "product__category"
-    get_category.short_description = "Category"
+    def category_link(self):
+        if self.product.category_page:
+            return mark_safe(
+                f"<a href={reverse('wagtailadmin_pages:edit', args=(self.product.category_page.id,))}>{self.product.category_page.title}</a>"
+            )
+    category_link.short_description = "Category"
+    category_link.admin_order_field = "product__category_page__title"
+    category_link.short_description = "Category"
     
     @property
     def code(self):
@@ -327,9 +371,10 @@ class ShopPage(Page):
     ]
 
     parent_page_types = ["home.HomePage"]
+    subpage_types = ["home.FormPage", "home.StandardPage", "CategoryPage"]
 
     def categories(self):
-        return ProductCategory.objects.filter(live=True).order_by("index")
+        return CategoryPage.objects.live().order_by("index")
 
     def get_context(self, request):
         from .views import get_basket_quantity

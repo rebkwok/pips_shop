@@ -380,8 +380,8 @@ class StandardPage(Page):
         FieldPanel("image"),
     ]
 
-    parent_page_types = ["HomePage"]
-    subpage_types = []
+    parent_page_types = ["HomePage", "shop.ShopPage", "shop.CategoryPage"]
+    subpage_types = ["StandardPage"]
 
 
 class FooterText(
