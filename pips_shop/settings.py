@@ -86,7 +86,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_ses",
     "wagtail.contrib.forms",
-    "wagtail.contrib.frontend_cache",
+    # "wagtail.contrib.frontend_cache",
     "wagtail.contrib.modeladmin",
     "wagtail.contrib.redirects",
     "wagtail.contrib.settings",
