@@ -109,6 +109,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "crispy_forms",
     "crispy_bootstrap4",
+    "storages",
     "salesman.core",
     "salesman.basket",
     "salesman.checkout",
@@ -232,18 +233,56 @@ STATICFILES_DIRS = [
 # See https://docs.djangoproject.com/en/4.2/ref/contrib/staticfiles/#manifeststaticfilesstorage
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "storages.backends.s3.S3Storage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
+if TESTING:
+    # use default storage backend in tests
+    STORAGES["default"]["BACKEND"] = "django.core.files.storage.FileSystemStorage"
+
+
+# for media storage with s3
+AWS_STORAGE_BUCKET_NAME = f"media.{DOMAIN}"
+
+if env("LOCAL", False):
+    AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
+
+
+# Disables signing of the S3 objects' URLs. When set to True it
+# will append authorization querystring to each URL.
+AWS_QUERYSTRING_AUTH = False
+
+# Do not allow overriding files on S3 as per Wagtail docs recommendation:
+# https://docs.wagtail.io/en/stable/advanced_topics/deploying.html#cloud-storage
+# Not having this setting may have consequences such as losing files.
+AWS_S3_FILE_OVERWRITE = False
+
+# Default ACL for new files should be "private" - not accessible to the
+# public. Images should be made available to public via the bucket policy,
+# where the documents should use wagtail-storages.
+AWS_DEFAULT_ACL = "private"
+
+# drop the .s3.amazonaws.com if using cloudfront
+AWS_S3_CUSTOM_DOMAIN =f"media.{DOMAIN}.s3.amazonaws.com"
+AWS_S3_REGION_NAME = "eu-west-1"
+
+
+# This settings lets you force using http or https protocol when generating
+# the URLs to the files. Set https as default.
+# https://github.com/jschneier/django-storages/blob/10d1929de5e0318dbd63d715db4bebc9a42257b5/storages/backends/s3boto3.py#L217
+AWS_S3_URL_PROTOCOL = env.str("AWS_S3_URL_PROTOCOL", "https:")
+
+
 STATIC_ROOT = os.path.join(BASE_DIR, "collected-static")
 STATIC_URL = "/static/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-MEDIA_URL = "/media/"
+MEDIA_URL = "/media/"  # note ignored if using S3 storage; should only be used in tests
 
 # Email
 if env("LOCAL") or env("CI") or env("TESTING"):

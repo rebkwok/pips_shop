@@ -9,6 +9,8 @@ django_ses[events]
 htmx
 pymemcache
 whitenoise
+django-storages[boto3]
+
 
 pytest
 coverage
