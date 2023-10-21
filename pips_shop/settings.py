@@ -275,7 +275,7 @@ AWS_S3_REGION_NAME = "eu-west-1"
 # This settings lets you force using http or https protocol when generating
 # the URLs to the files. Set https as default.
 # https://github.com/jschneier/django-storages/blob/10d1929de5e0318dbd63d715db4bebc9a42257b5/storages/backends/s3boto3.py#L217
-AWS_S3_URL_PROTOCOL = env.str("AWS_S3_URL_PROTOCOL", "https:")
+AWS_S3_URL_PROTOCOL = env.str("AWS_S3_URL_PROTOCOL", "http:")
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, "collected-static")
