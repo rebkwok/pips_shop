@@ -26,6 +26,7 @@ env = environ.Env(
     LOCAL=(bool, False),
     TESTING=(bool, False),
     CI=(bool, False),
+    LOCAL_S3=(bool, False)
 )
 
 environ.Env.read_env(root("pips_shop/.env"))  # reading .env file
@@ -244,7 +245,7 @@ STORAGES = {
     },
 }
 
-if TESTING:
+if TESTING or (env("LOCAL", False) and not env("LOCAL_S3", False)):
     # use default storage backend in tests
     STORAGES["default"]["BACKEND"] = "django.core.files.storage.FileSystemStorage"
 
@@ -252,7 +253,7 @@ if TESTING:
 # for media storage with s3
 AWS_STORAGE_BUCKET_NAME = f"media.{DOMAIN}"
 
-if env("LOCAL", False):
+if env("LOCAL", False) or env("LOCAL_S3", False):
     AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
 
@@ -271,15 +272,15 @@ AWS_S3_FILE_OVERWRITE = False
 # where the documents should use wagtail-storages.
 AWS_DEFAULT_ACL = "private"
 
-# drop the .s3.amazonaws.com if using cloudfront
-AWS_S3_CUSTOM_DOMAIN =f"media.{DOMAIN}.s3.amazonaws.com"
+# only if using cloudfront
+# AWS_S3_CUSTOM_DOMAIN =f"media.{DOMAIN}"
 AWS_S3_REGION_NAME = "eu-west-1"
 
 
 # This settings lets you force using http or https protocol when generating
 # the URLs to the files. Set https as default.
 # https://github.com/jschneier/django-storages/blob/10d1929de5e0318dbd63d715db4bebc9a42257b5/storages/backends/s3boto3.py#L217
-AWS_S3_URL_PROTOCOL = env.str("AWS_S3_URL_PROTOCOL", "http:")
+AWS_S3_URL_PROTOCOL = env.str("AWS_S3_URL_PROTOCOL", "https:")
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, "collected-static")
