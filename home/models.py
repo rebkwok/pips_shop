@@ -311,7 +311,7 @@ class FormPage(AbstractEmailForm):
 
     def get_form(self, *args, **kwargs):
         form = super().get_form(*args, **kwargs)
-        if self.ref and "subject" in form.fields:
+        if hasattr(self, "ref") and "subject" in form.fields:
             form.fields["subject"].initial = f"Enquiry about {self.ref}"
         return form
 

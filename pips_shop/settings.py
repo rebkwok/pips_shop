@@ -200,6 +200,10 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Date formats
+SHORT_DATETIME_FORMAT = "d-M-Y H:i"
+SHORT_DATE_FORMAT = "d-M-Y"
+
 if TESTING or env('LOCAL') or env('CI'):  # use local cache for tests
     CACHES = {
         'default': {

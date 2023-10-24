@@ -18,11 +18,6 @@ class ShopPageFactory(wagtail_factories.PageFactory):
 
 
 @pytest.fixture
-def root_page():
-    yield wagtail_factories.PageFactory(parent=None)
-
-
-@pytest.fixture
 def shop_page(root_page):
     yield ShopPageFactory(parent=root_page)
 
