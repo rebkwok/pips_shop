@@ -21,13 +21,14 @@ urlpatterns = [
 ]
 
 
-if settings.DEBUG:
+if settings.DEBUG or settings.TESTING:  # pragma: no cover
     from django.conf.urls.static import static
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
     # Serve static and media files from development server
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 urlpatterns += (path(r"django-admin/django-ses/", include("django_ses.urls")),)
 

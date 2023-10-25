@@ -9,26 +9,14 @@ import pytest
 
 import wagtail_factories
 
-from ..models import HomePage, FormPage, FormField, FooterText
+from ..models import FormPage, FormField, FooterText
 
 pytestmark = pytest.mark.django_db
-
-
-class HomePageFactory(wagtail_factories.PageFactory):
-    class Meta:
-        model = HomePage
 
 
 class FormPageFactory(wagtail_factories.PageFactory):
     class Meta:
         model = FormPage
-
-
-@pytest.fixture
-def home_page(root_page):
-    yield HomePageFactory(
-        parent=root_page, title="Home", hero_text="Home", hero_cta="Test", body="Test"
-    )
 
 
 @pytest.fixture

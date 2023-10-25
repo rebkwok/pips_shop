@@ -212,7 +212,7 @@ if TESTING or env('LOCAL') or env('CI'):  # use local cache for tests
             'LOCATION': 'pips_shop',
         }
     }
-else:
+else:  # pragma: no cover
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
