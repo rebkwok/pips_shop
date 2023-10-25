@@ -108,16 +108,18 @@ def post_init_item(sender, instance, **kwargs):
 
 @receiver(post_save, sender=BasketItem)
 def post_save_item(sender, instance, **kwargs):
-    quantity_diff = instance._current_quantity - instance.quantity
-    # positive diff means items have been taken out of basket, so add to stock
-    instance.product.stock += quantity_diff
-    instance.product.save()
+    if instance.product:
+        quantity_diff = instance._current_quantity - instance.quantity
+        # positive diff means items have been taken out of basket, so add to stock
+        instance.product.stock += quantity_diff
+        instance.product.save()
 
 
 @receiver(post_delete, sender=BasketItem)
 def post_delete_item(sender, instance, **kwargs):
-    instance.product.stock += instance.quantity
-    instance.product.save()
+    if instance.product:
+        instance.product.stock += instance.quantity
+        instance.product.save()
 
 
 @receiver(post_delete, sender=Basket)

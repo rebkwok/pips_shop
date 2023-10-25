@@ -208,11 +208,12 @@ class Product(ClusterableModel):
 
     @property
     def images(self):
-        all_images = []
+        all_images = list()
         if self.image:
             all_images.append(self.image)
         for variant in self.live_variants.filter(image__isnull=False):
-            all_images.append(variant.image)
+            if variant.image not in all_images:
+                all_images.append(variant.image)
         return all_images
 
 
