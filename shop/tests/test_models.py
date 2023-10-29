@@ -115,6 +115,11 @@ def test_product_out_of_stock(product):
     assert product.out_of_stock()
 
 
+def test_product_out_of_stock_no_variants(product):
+    assert not product.variants.exists()
+    assert product.out_of_stock()
+
+
 def test_product_images(product):
     # images are collated across product and product variants, duplicates are ignores
     image1 = baker.make("wagtailimages.Image")

@@ -5,6 +5,7 @@ import logging
 import requests
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import DetailView
@@ -20,6 +21,9 @@ from .payment import PAYMENT_METHOD_DESCRIPTIONS
 logger = logging.getLogger(__name__)
 
 Basket = get_salesman_model("Basket")
+
+
+# HELPER FUNCTIONS
 
 
 def get_basket(request):
@@ -42,19 +46,6 @@ def get_basket_quantity_and_total(request):
     return get_basket_quantity(request), get_basket(request)["total"]
 
 
-class ProductDetailView(DetailView):
-    model = Product
-    template_name = "shop/shop_product_page.html"
-    context_object_name = "product"
-
-
-def decrease_quantity(request, product_id):        
-    value = int(request.GET.get("quantity", 1))
-    if value > 1:
-        value -= 1
-    return _change_quantity(request, product_id, value)
-
-
 def get_basket_item(basket, product_id):
     if not basket["items"]:
         return {}
@@ -63,8 +54,24 @@ def get_basket_item(basket, product_id):
         {}
     )
 
-def can_increase_quantity(request, variant, value, in_basket=False):
-    # value is the amount we want to increase TO
+def get_basket_context(basket):
+    basket_quantity = _get_basket_quantity(basket)
+    items_by_product = {}
+    for item in basket.get("items", []):
+        product_type = ProductVariant.objects.get(id=item["product_id"]).product
+        item["product_type"] = product_type.name
+        item["category"] = product_type.category_page.title
+        items_by_product.setdefault(product_type.identifier, []).append(item)
+    basket["items"] = items_by_product
+    return {"basket": basket, "basket_quantity": basket_quantity}
+
+
+def _get_basket_quantity(basket):
+    return sum(int(item["quantity"]) for item in basket.get("items", []))
+
+
+def _can_increase_quantity(request, variant, value, in_basket=False):
+    # value is the amount we want to change TO (may actually be a decrease if we're in the basket)
     if in_basket:
         # increasing a value from the basket; current basket quantity 
         # is already incorporated into stock numbers
@@ -82,17 +89,35 @@ def can_increase_quantity(request, variant, value, in_basket=False):
         logger.info("New quantity %s", value)
         return (variant.stock - value) >= 0
 
+
+# VIEWS
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "shop/shop_product_page.html"
+    context_object_name = "product"
+
+
+def decrease_quantity(request, product_id):        
+    value = int(request.GET.get("quantity", 1))
+    if value > 1:
+        value -= 1
+    return _change_quantity(request, product_id, value)
+
+
 def increase_quantity(request, product_id):
     # product_id in the URL is the PRODUCT
     # product_id in GET is the variant
     # We need to increase the variant; the +/- buttons on the shop page refer to product
     variant_id = int(request.GET.get("product_id"))
     variant = ProductVariant.objects.get(id=int(variant_id))
+    # value represents the CURRENT value of the quantity field (pre-increase)
     value = int(request.GET.get("quantity", 1))
     in_basket = request.GET.get("ref") == "basket"
-    # We click on this to increase the quantity from its current value
+    # We click on this button to increase the quantity from its current value
     # check that we can increase to this value plus 1
-    can_increase = can_increase_quantity(request, variant, value + 1, in_basket)
+    can_increase = _can_increase_quantity(request, variant, value + 1, in_basket)
     if can_increase:
         value += 1
     return _change_quantity(request, product_id, value, can_increase=can_increase)
@@ -126,7 +151,7 @@ def add_to_basket(request, product_id):
     # add_to_basket is called from the shop page, not the basket page; we're
     # adding this entire quantity to the basket, but we're not incrementing 
     # it, so just check we can add the current quantity
-    can_increase = can_increase_quantity(
+    can_increase = _can_increase_quantity(
         request, variant, int(request.POST.get("quantity")), in_basket=False
     )        
     
@@ -264,27 +289,11 @@ def basket_view(request):
     shipping_methods = [("collect", "Collect in store"), ("deliver", "Delivery")]
     for method in payment_methods:
         method["help"] = PAYMENT_METHOD_DESCRIPTIONS[method["identifier"]]
-    return render(
+    return TemplateResponse(
         request,
         "shop/basket.html",
         {**basket_context, "payment_methods": payment_methods, "shipping_methods": shipping_methods, "hide_basket": True},
     )
-
-
-def get_basket_context(basket):
-    basket_quantity = _get_basket_quantity(basket)
-    items_by_product = {}
-    for item in basket.get("items", []):
-        product_type = ProductVariant.objects.get(id=item["product_id"]).product
-        item["product_type"] = product_type.name
-        item["category"] = product_type.category_page.title
-        items_by_product.setdefault(product_type.identifier, []).append(item)
-    basket["items"] = items_by_product
-    return {"basket": basket, "basket_quantity": basket_quantity}
-
-
-def _get_basket_quantity(basket):
-    return sum(int(item["quantity"]) for item in basket.get("items", []))
 
 
 def checkout_view(request):

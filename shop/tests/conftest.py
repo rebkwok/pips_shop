@@ -33,4 +33,14 @@ def category_page(shop_page):
 def product(category_page):
     yield baker.make("shop.Product", name="Test Product", category_page=category_page)
 
-    
+
+@pytest.fixture
+def basket(product):
+    basket = baker.make("shop.Basket", extra={"name": "Test User"}, shipping_method="collect")
+    variant = baker.make(
+        "shop.ProductVariant", product=product, variant_name="Small", price=10
+    )
+    item = baker.make("shop.BasketItem", product=variant, quantity=2)
+    basket.items.add(item)
+    basket.update(request=None)
+    yield basket

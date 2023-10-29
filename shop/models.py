@@ -194,7 +194,9 @@ class Product(ClusterableModel):
         return self.variants.filter(live=True)
 
     def out_of_stock(self):
-        return self.variants.aggregate(models.Sum("stock"))["stock__sum"] <= 0
+        if self.variants.exists():
+            return self.variants.aggregate(models.Sum("stock"))["stock__sum"] <= 0
+        return True
 
     @property
     def identifier(self):
