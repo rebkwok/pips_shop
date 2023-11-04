@@ -91,15 +91,14 @@ def test_get_basket_with_items(rf, basket):
     assert basket_item["product"]["name"] == 'Test Product - Small'
 
 
-def test_get_basket_item(rf, basket, product):
+def test_get_basket_item(rf, basket):
+    product = basket.items.first().product    
     request = rf.get('/')
-    # no basket
-    basket_resp = get_basket(request)
-    get_basket_item(basket_resp, product.id) == {}
-    # with basket
     request.session = {"BASKET_ID": basket.id}
     basket_resp = get_basket(request)
     basket_item = get_basket_item(basket_resp, product.id)
+    assert request.session["BASKET_ID"] == basket.id
+    assert basket_resp.get("id") == basket.id
     assert basket_item["product"]["name"] == 'Test Product - Small'
 
 
