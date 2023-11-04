@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from model_bakery import baker
@@ -11,9 +13,16 @@ from ..views import (
     basket_view,
     decrease_quantity, 
     get_basket, 
-    get_basket_item, 
+    get_basket_item,
+    get_basket_total,
+    get_basket_quantity_and_total,
     _can_increase_quantity, 
-    increase_quantity
+    increase_quantity,
+    update_quantity,
+    delete_basket_item,
+    checkout_view,
+    new_order_view,
+    order_status_view,
 )
 
 
@@ -35,6 +44,18 @@ def test_get_basket(rf):
         'subtotal': '0.00',
         'total': '0.00'
     }
+
+
+def test_get_basket_total(rf):
+    request = rf.get('/')
+    basket_resp = get_basket_total(request)
+    assert basket_resp == "0.00"
+
+
+def test_get_basket_quantity_and_total(rf):
+    request = rf.get('/')
+    basket_resp = get_basket_quantity_and_total(request)
+    assert basket_resp == (0, "0.00")
 
 
 def test_get_existing_empty_basket(rf):
@@ -264,3 +285,52 @@ def test_add_to_basket_out_of_stock(rf, basket, product):
     # so quantity and +/- buttons hidden
     assert f'id="id_quantity_{product.id}" name="quantity" type="number" value=1' not in content
     assert '<div class="text-danger">Out of stock</div>' in content
+
+
+def test_add_to_basket_with_error(rf, product):
+    # setup empty basket
+    request = rf.get('/')
+    basket_id = get_basket(request)["id"]
+    variant = baker.make(
+        "shop.ProductVariant", product=product, variant_name="Small", price=10,
+        stock=4
+    )
+    request = rf.post(
+        reverse("shop:add_to_basket", args=(product.id,)),
+        {"quantity": 3, "product_id": variant.id, "product_type": "shop.ProductVariant"}
+    )
+    request.session = {"BASKET_ID": basket_id}
+
+    with mock.patch("shop.views.BasketViewSet.as_view") as mock_basket_as_view:
+        class MockResp:
+            data = {"quantity": 0}
+            status_code = 400
+
+            def __init__(*args, **kwargs):
+                ...
+        mock_basket_as_view.return_value = MockResp
+        resp = add_to_basket(request, product.id)
+    content = resp.content.decode()
+    assert 'Something went wrong' in content
+
+
+def test_add_to_basket_cant_increase(rf, product):
+    # setup empty basket
+    request = rf.get('/')
+    basket_id = get_basket(request)["id"]
+    # variant with 1 in stock
+    variant = baker.make(
+        "shop.ProductVariant", product=product, variant_name="Small", price=10,
+        stock=1
+    )
+    # try to add 2 to basked
+    request = rf.post(
+        reverse("shop:add_to_basket", args=(product.id,)),
+        {"quantity": 2, "product_id": variant.id, "product_type": "shop.ProductVariant"}
+    )
+    request.session = {"BASKET_ID": basket_id}
+    resp = add_to_basket(request, product.id)
+    content = resp.content.decode()
+    # no items in basket
+    assert '<i class="fa-solid fa-basket-shopping"></i>  (0)' in content
+    assert 'Quantity requested is not available' in content

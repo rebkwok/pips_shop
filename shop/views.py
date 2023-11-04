@@ -153,8 +153,8 @@ def add_to_basket(request, product_id):
     # it, so just check we can add the current quantity
     can_increase = _can_increase_quantity(
         request, variant, int(request.POST.get("quantity")), in_basket=False
-    )        
-    
+    )
+
     if can_increase:
         resp = BasketViewSet.as_view({"post": "create"})(request)
         new_basket_quantity = get_basket_quantity(request)
@@ -192,7 +192,7 @@ def add_to_basket(request, product_id):
         basket_quantity = get_basket_quantity(request)
         resp_str = f"<div>{_basket_icon_html(request, basket_quantity)}</div>"
         resp_str += f"""
-        <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
+        <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Quantity requested is not available</div>
         """
     
     return HttpResponse(resp_str)
