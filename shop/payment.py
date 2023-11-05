@@ -58,7 +58,6 @@ class PayByStripe(StripePayment):
         basket.update(request)
         return super().basket_payment(basket, request)
 
-
     def get_stripe_session_data(
         self, 
         obj, # BasketOrOrder,

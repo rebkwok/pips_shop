@@ -8,6 +8,8 @@ from salesman.core.utils import get_salesman_model
 from ..models import CategoryPage, ShopPage
 
 
+Basket = get_salesman_model("Basket")
+
 Order = get_salesman_model("Order")
 
 pytestmark = pytest.mark.django_db

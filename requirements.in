@@ -10,7 +10,9 @@ htmx
 pymemcache
 whitenoise
 django-storages[boto3]
-
+django-salesman[pygments]
+django-salesman-stripe
+crispy-bootstrap4
 
 pytest
 coverage
@@ -25,8 +27,5 @@ ruff
 black
 model_bakery
 wagtail-factories
-
-django-salesman[pygments]
-django-salesman-stripe
-crispy-bootstrap4
+requests-mock
 
