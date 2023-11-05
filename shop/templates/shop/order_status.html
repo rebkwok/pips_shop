@@ -27,7 +27,7 @@
                         {% endfor %}
                         </ul>
                     <li>Order date: {{ order.date_created|date:"d M Y" }}</li>
-                    <li>Shipping method: {{ shipping_method }}</li>
+                    <li>Shipping method: {{ order.shipping_method }}</li>
                     {% if order.shipping_method != "collect" %}
                         <li>Shipping address: {{ order.shipping_address }}</li>
                     {% endif %}

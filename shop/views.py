@@ -4,7 +4,7 @@ import logging
 
 import requests
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.template.response import TemplateResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -21,6 +21,7 @@ from .payment import PAYMENT_METHOD_DESCRIPTIONS
 logger = logging.getLogger(__name__)
 
 Basket = get_salesman_model("Basket")
+Order = get_salesman_model("Order")
 
 
 # HELPER FUNCTIONS
@@ -235,10 +236,14 @@ def update_quantity(request, ref):
 
 
 def delete_basket_item(request, ref):
+    # This is the product variant ID
     product_id = int(request.POST.get("product_id"))
 
     request.method = "DELETE"
+    # The serialised basket identifies products (NOT variants) with their idenitifier, not id
+    # Find the relevant product idenitifier
     product_identifier = ProductVariant.objects.get(id=product_id).product.identifier
+    # Delete the item
     resp = BasketViewSet.as_view({"delete": "destroy"})(request, ref=ref)
 
     if resp.status_code != 204:
@@ -246,24 +251,31 @@ def delete_basket_item(request, ref):
             <div id='updated_{product_id}' class='alert-danger' hx-swap-oob='true'>Error</div>
         """
     else:
+        # The item deletion was successful
+        # Get the new basket quantity and the new basket
         request.method = "GET"
         new_basket_quantity = get_basket_quantity(request)
         basket = get_basket(request)
-        any_products = any(
+        # Does the basket still have any items (variants) for this product?
+        any_product_items = any(
             1
             for item in basket["items"]
             if ProductVariant.objects.get(id=item["product_id"]).product.identifier
             == product_identifier
         )
 
-        if not any_products:
+        if not any_product_items:
+            # No items for this product, hide the entire product row
             resp_str = f"<div id='row-{product_identifier}' hx-swap-oob='true'></div>"
         else:
+            # Some items for this product, just hide the single variant row
             resp_str = f"<div id='row-{product_id}' hx-swap-oob='true'></div>"
 
         if new_basket_quantity == 0:
+            # No items in the basket
             resp_str += "<div id='basket-total-and-payment' hx-swap-oob='true'><p>Basket is empty.</p></div>"
         else:
+            # Still items left, update the total
             resp_str += f"<span id='total' hx-swap-oob='true'>{basket['total']}</span>"
 
         basket_extra_html = render_to_string(
@@ -304,7 +316,6 @@ def checkout_view(request):
     if request.method == "POST":
 
         form = CheckoutForm(payment_method=payment_method, shipping_method=shipping_method, data=request.POST)
-
         if form.is_valid():
             checkout = CheckoutViewSet.as_view({"post": "create"})(request)
 
@@ -329,7 +340,7 @@ def checkout_view(request):
     resp = BasketViewSet.as_view({"get": "list"})(request)
     context = {**context, "form": form, **get_basket_context(resp.data)}
 
-    return render(request, "shop/checkout.html", context)
+    return TemplateResponse(request, "shop/checkout.html", context)
 
 
 def new_order_view(request, token):
@@ -341,23 +352,18 @@ def order_status_view(request, token):
 
 
 def _order_status(request, token, new=False):
-    parsed = urlparse(request.build_absolute_uri())
-    url = urlunparse(
-        (
-            parsed.scheme,
-            parsed.netloc,
-            "/api/orders/last/",
-            "",
-            f"token={token}&format=json",
-            "",
-        )
-    )
-    resp = requests.get(url)
-    order = resp.json()
-    order["date_created"] = datetime.strptime(
-        order["date_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
-    )
-    order = get_basket_context(order)["basket"]
-    shipping_method = SHIPPING_METHODS[order["shipping_method"]]
-    context = {"order": order, "new_order": new, "hide_basket": True, "shipping_method": shipping_method}
-    return render(request, "shop/order_status.html", context)
+    order = get_object_or_404(Order, token=token)
+    serialized_order = order.serializable_data()
+    order_as_basket = get_basket_context(serialized_order)["basket"]
+    context = {
+        "order": {
+            **serialized_order,
+            **order_as_basket, 
+            "amount_outstanding": order.amount_outstanding,
+            "amount_paid": order.amount_paid,
+        }, 
+        "new_order": new, 
+        "hide_basket": True, 
+        
+    }
+    return TemplateResponse(request, "shop/order_status.html", context)

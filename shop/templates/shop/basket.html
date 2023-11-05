@@ -62,7 +62,7 @@
                                             <button type="submit" 
                                                 class="btn basket-btn basket-btn-danger ml-4"
                                                 value="X"
-                                                hx-post="{% url 'shop:delete' item.ref %}"
+                                                hx-post="{% url 'shop:delete_basket_item' item.ref %}"
                                                 hx-trigger="click"
                                             >
                                                 <i class="fa-regular fa-trash-can"></i>

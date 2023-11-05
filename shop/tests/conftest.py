@@ -1,10 +1,14 @@
 import pytest
-from model_bakery import baker
 import wagtail_factories
+
+from model_bakery import baker
+from salesman.core.utils import get_salesman_model
 
 
 from ..models import CategoryPage, ShopPage
 
+
+Order = get_salesman_model("Order")
 
 pytestmark = pytest.mark.django_db
 
@@ -38,9 +42,14 @@ def product(category_page):
 def basket(product):
     basket = baker.make("shop.Basket", extra={"name": "Test User"}, shipping_method="collect")
     variant = baker.make(
-        "shop.ProductVariant", product=product, variant_name="Small", price=10
+        "shop.ProductVariant", product=product, variant_name="Small", price=10,
+        stock=5,
     )
-    item = baker.make("shop.BasketItem", product=variant, quantity=2)
-    basket.items.add(item)
+    basket.add(variant, quantity=2)
     basket.update(request=None)
     yield basket
+
+
+@pytest.fixture
+def order(basket):
+    yield Order.objects.create_from_basket(basket, request=None)

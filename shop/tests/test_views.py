@@ -31,6 +31,16 @@ Basket = get_salesman_model("Basket")
 pytestmark = pytest.mark.django_db
 
 
+def mock_as_view_resp(status_code, data):
+
+    class MockAsViewResp:        
+        def __init__(self, *args, **kwargs):
+            self.status_code = status_code
+            self.data = data
+    
+    return MockAsViewResp
+
+
 def test_get_basket(rf):
     request = rf.get('/')
     assert not Basket.objects.exists()
@@ -91,12 +101,20 @@ def test_get_basket_with_items(rf, basket):
     assert basket_item["product"]["name"] == 'Test Product - Small'
 
 
+def test_get_basket_item_no_item(rf, basket):
+    variant = basket.items.first().product
+    request = rf.get('/')
+    basket_resp = get_basket(request)
+    basket_item = get_basket_item(basket_resp, variant.id)
+    assert basket_item == {}
+
+
 def test_get_basket_item(rf, basket):
-    product = basket.items.first().product    
+    variant = basket.items.first().product    
     request = rf.get('/')
     request.session = {"BASKET_ID": basket.id}
     basket_resp = get_basket(request)
-    basket_item = get_basket_item(basket_resp, product.id)
+    basket_item = get_basket_item(basket_resp, variant.id)
     assert request.session["BASKET_ID"] == basket.id
     assert basket_resp.get("id") == basket.id
     assert basket_item["product"]["name"] == 'Test Product - Small'
@@ -301,13 +319,9 @@ def test_add_to_basket_with_error(rf, product):
     request.session = {"BASKET_ID": basket_id}
 
     with mock.patch("shop.views.BasketViewSet.as_view") as mock_basket_as_view:
-        class MockResp:
-            data = {"quantity": 0}
-            status_code = 400
-
-            def __init__(*args, **kwargs):
-                ...
-        mock_basket_as_view.return_value = MockResp
+        mock_basket_as_view.return_value = mock_as_view_resp(
+            status_code=400, data={"quantity": 0}
+        )
         resp = add_to_basket(request, product.id)
     content = resp.content.decode()
     assert 'Something went wrong' in content
@@ -333,3 +347,330 @@ def test_add_to_basket_cant_increase(rf, product):
     # no items in basket
     assert '<i class="fa-solid fa-basket-shopping"></i>  (0)' in content
     assert 'Quantity requested is not available' in content
+
+
+### Update quantity from basket
+
+
+def test_update_quantity(rf, basket):
+    # basket has 1 variant, quantity 2
+    assert basket.items.count() == 1
+    basket_item = basket.items.first()
+    assert basket_item.quantity == 2
+    variant_id = basket_item.product.id
+
+    # product ID in post is the product variant
+    data = {"quantity": 3, "product_id": variant_id}
+    request = rf.post(
+        reverse("shop:update_quantity", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+
+    update_quantity(request, basket_item.ref)
+
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    assert basket.quantity ==3
+
+
+def test_update_quantity_nothing_to_update(rf, basket):
+    # basket has 1 variant, quantity 2
+    basket_item = basket.items.first()
+    variant_id = basket_item.product.id
+    # product ID in post is the product variant
+    # update to same quantity
+    data = {"quantity": 2, "product_id": variant_id}
+    request = rf.post(
+        reverse("shop:update_quantity", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+
+    update_quantity(request, basket_item.ref)
+
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    assert basket.quantity == 2
+
+
+def test_update_quantity_with_error(rf, basket):
+    # basket has 1 variant, quantity 2
+    basket_item = basket.items.first()
+    variant_id = basket_item.product.id
+    # product ID in post is the product variant
+    # update to same quantity
+    data = {"quantity": 2, "product_id": variant_id}
+    request = rf.post(
+        reverse("shop:update_quantity", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+
+    with mock.patch("shop.views.BasketViewSet.as_view") as mock_basket_as_view:
+        mock_basket_as_view.return_value = mock_as_view_resp(
+            status_code=400, data={"quantity": 4}
+        )
+        resp = update_quantity(request, basket_item.ref)
+
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    assert basket.quantity == 2
+    assert "Error" in resp.content.decode()
+
+
+### Delete items from basket
+
+def test_sole_delete_basket_item(rf, basket):
+    # basket has 1 variant, quantity 2
+    assert basket.items.count() == 1
+    basket_item = basket.items.first()
+    variant_id = basket_item.product.id
+    # product ID in post is the product variant
+    data = {"product_id": variant_id}
+    request = rf.post(
+        reverse("shop:delete_basket_item", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+
+    resp = delete_basket_item(request, basket_item.ref)
+    assert "Basket is empty." in resp.content.decode()
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    assert basket.quantity == 0
+
+
+def test_delete_basket_item_other_variants_left(rf, basket):
+    basket_item = basket.items.first()
+    variant = basket_item.product
+    product = variant.product
+
+    # Make another variant for this product and add to basket
+    variant1 = baker.make(
+        "shop.ProductVariant", product=product, variant_name="Medium", price=15,
+        stock=5,
+    )
+    basket.add(variant1, quantity=1)
+    basket.update(request=None)
+    assert basket.quantity == 3
+    assert basket.total == 35
+
+    # product ID in post is the product variant
+    data = {"product_id": variant.id}
+    request = rf.post(
+        reverse("shop:delete_basket_item", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+    # delete the original variant
+    resp = delete_basket_item(request, basket_item.ref)
+    # this hides just the variant row
+    assert f"<div id='row-{variant.id}' hx-swap-oob='true'></div>" in resp.content.decode()
+    # this updates the total
+    assert f"<span id='total' hx-swap-oob='true'>15.00</span>" in resp.content.decode()
+
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    basket.update(request)
+    assert basket.quantity == 1
+    assert basket.total == 15
+
+
+def test_delete_basket_item_other_products_left(rf, basket, category_page):
+    basket_item = basket.items.first()
+    variant = basket_item.product
+    product = variant.product
+
+    # Make another variant for another product and add to basket
+    new_product = baker.make(
+        "shop.Product", name="Mug", category_page=category_page
+    )
+    variant1 = baker.make("shop.ProductVariant", product=new_product, price=5, stock=5)
+    basket.add(variant1, quantity=1)
+    basket.update(request=None)
+    assert basket.quantity == 3
+    assert basket.total == 25
+
+    # product ID in post is the product variant
+    data = {"product_id": variant.id}
+    request = rf.post(
+        reverse("shop:delete_basket_item", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+    # delete the original variant
+    resp = delete_basket_item(request, basket_item.ref)
+
+    # this hides the entire row for the deleted product
+    assert f"<div id='row-{product.identifier}' hx-swap-oob='true'></div>" in resp.content.decode()
+    # this updates the total
+    assert f"<span id='total' hx-swap-oob='true'>5.00</span>" in resp.content.decode()
+
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    basket.update(request)
+    assert basket.quantity == 1
+    assert basket.total == 5
+
+
+def test_delete_basket_item_with_error(rf, basket):
+    basket_item = basket.items.first()
+    variant_id = basket_item.product.id
+    data = {"product_id": variant_id}
+    request = rf.post(
+        reverse("shop:update_quantity", args=(basket_item.ref,)), data=data
+    )
+    request.session = {"BASKET_ID": basket.id}
+
+    with mock.patch("shop.views.BasketViewSet.as_view") as mock_basket_as_view:
+        mock_basket_as_view.return_value = mock_as_view_resp(
+            status_code=400, data={"quantity": 2}
+        )
+        resp = delete_basket_item(request, basket_item.ref)
+
+    # refresh_from_db isn't enough to get the update basket here
+    basket = Basket.objects.get(id=basket.id)
+    # no change to basket
+    assert basket.quantity == 2
+    assert "Error" in resp.content.decode()
+
+
+## CHECKOUT VIEW
+
+
+def test_get_checkout_view(rf, basket):
+    request = rf.get(reverse("shop:checkout") + "?payment-method=stripe&shipping-method=deliver")
+    request.session = {"BASKET_ID": basket.id}
+
+    resp = checkout_view(request)
+    assert resp.status_code == 200
+    basket = Basket.objects.get(id=basket.id)
+    assert basket.shipping_method == "deliver"
+
+
+@mock.patch("shop.views.CheckoutViewSet.as_view")
+def test_post_checkout_view(mock_checkout, rf, basket):
+    mock_checkout.return_value = mock_as_view_resp(
+            status_code=201, data={"url": "https://test-checkout"}
+        )
+
+    form_data = {
+        "email": "test@test.com",
+        "email1": "test@test.com",
+        "name": "Test",
+        "payment_method": "stripe",
+        "shipping_method": "collect",
+        "billing_address": "-",
+        "shipping_address": "-"
+    }
+    request = rf.post(
+        reverse("shop:checkout") + "?payment-method=stripe&shipping-method=collect",
+        data=form_data
+    )
+    request.session = {"BASKET_ID": basket.id}
+    resp = checkout_view(request)
+    
+    # redirects to the stripe payment method from the mock checkout call
+    assert resp.status_code == 302
+    assert resp.url == "https://test-checkout"
+
+
+def test_post_checkout_view_invalid_form(rf, basket):
+    form_data = {
+        "email": "test@test.com",
+        "email1": "tst@test.com",
+        "name": "Test",
+        "payment_method": "stripe",
+        "shipping_method": "collect",
+        "billing_address": "-",
+        "shipping_address": "-"
+    }
+    request = rf.post(
+        reverse("shop:checkout") + "?payment-method=stripe&shipping-method=collect",
+        data=form_data
+    )
+    request.session = {"BASKET_ID": basket.id}
+    resp = checkout_view(request)
+    
+    # redirects to the stripe payment method from the mock checkout call
+    assert resp.status_code == 200
+    assert resp.context_data["form"].errors == {
+        "email1": ["Email fields do not match"]
+    }
+
+
+@mock.patch("shop.views.CheckoutViewSet.as_view")
+def test_post_checkout_view_non_stripe_payment_method(mock_checkout, rf, basket):
+    mock_checkout.return_value = mock_as_view_resp(
+            status_code=201, data={"url": "https://test-checkout?token=foo"}
+        )
+
+    form_data = {
+        "email": "test@test.com",
+        "email1": "test@test.com",
+        "name": "Test",
+        "payment_method": "stripe",
+        "shipping_method": "collect",
+        "billing_address": "-",
+        "shipping_address": "-"
+    }
+    request = rf.post(
+        reverse("shop:checkout") + "?payment-method=pay-in-advance&shipping-method=collect",
+        data=form_data
+    )
+    request.session = {"BASKET_ID": basket.id}
+    resp = checkout_view(request)
+    
+    # redirects to the new order status using the token from the mock checkout call
+    assert resp.status_code == 302
+    assert resp.url == reverse("shop:new_order_status", args=("foo",))
+
+
+@mock.patch("shop.views.CheckoutViewSet.as_view")
+def test_post_checkout_view_error(mock_checkout, rf, basket):
+    mock_checkout.return_value = mock_as_view_resp(
+        status_code=400, data={"url": "https://test-checkout?token=foo"}
+    )
+
+    form_data = {
+        "email": "test@test.com",
+        "email1": "test@test.com",
+        "name": "Test",
+        "payment_method": "stripe",
+        "shipping_method": "collect",
+        "billing_address": "-",
+        "shipping_address": "-"
+    }
+    request = rf.post(
+        reverse("shop:checkout") + "?payment-method=stripe&shipping-method=collect",
+        data=form_data
+    )
+    request.session = {"BASKET_ID": basket.id}
+    resp = checkout_view(request)
+    
+    # redirects to the new order status using the token from the mock checkout call
+    assert resp.status_code == 200
+    assert "checkout_error" in resp.context_data
+
+
+### ORDER STATUS VIEWS
+
+def test_order_status_view(rf, order):
+    request = rf.get("/")
+    resp = order_status_view(request, order.token)
+    order_context = resp.context_data["order"]
+    # order has relevant order info, plus rejigged basket info
+    # These are not on the serialised object
+    assert "amount_outstanding" in order_context
+    assert "amount_paid" in order_context
+    # items are organised by product identifier
+    assert len(order_context["items"]["test-category-test-product"]) == 1
+    # and has category added in
+    assert order_context["items"]["test-category-test-product"][0]["category"] == "Test Category"
+    assert resp.context_data["hide_basket"]
+    assert not resp.context_data["new_order"]
+    assert "Amount paid: £0" in resp.rendered_content
+    assert "Thank you for your order!" not in resp.rendered_content
+   
+
+def test_new_order_status_view(rf, order):
+    request = rf.get("/")
+    resp = new_order_view(request, order.token)
+    assert resp.context_data["hide_basket"]
+    assert resp.context_data["new_order"]
+    assert "Thank you for your order!" in resp.rendered_content
