@@ -23,16 +23,6 @@ def has_menu_children(page):
     return page.get_children().live().in_menu().exists()
 
 
-def has_children(page):
-    # Generically allow index pages to list their children
-    return page.get_children().live().exists()
-
-
-def is_active(page, current_page):
-    # To give us active state on main navigation
-    return current_page.url_path.startswith(page.url_path) if current_page else False
-
-
 # Retrieves the top menu items - the immediate children of the parent page
 # The has_menu_children method is necessary because the Foundation menu requires
 # a dropdown class to be applied to a parent
