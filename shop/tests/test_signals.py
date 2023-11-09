@@ -6,14 +6,11 @@ from django.core import mail
 
 from salesman.core.utils import get_salesman_model
 
-from shop.payment import PayInAdvance, PayByStripe
-
-from .conftest import CategoryPageFactory
-
 
 Order = get_salesman_model("Order")
 
 pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def shop_settings():
