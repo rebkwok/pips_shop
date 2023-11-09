@@ -37,7 +37,9 @@ def category_page(shop_page):
 
 @pytest.fixture
 def product(category_page):
-    yield baker.make("shop.Product", name="Test Product", category_page=category_page)
+    yield baker.make(
+        "shop.Product", name="Test Product", category_page=category_page, price=12
+    )
 
 
 @pytest.fixture

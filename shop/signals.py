@@ -20,7 +20,9 @@ def get_email_settings():
     shop_email_settings = ShopSettings.load()
     notify_emails = shop_email_settings.notify_email_addresses
     if notify_emails:
-        notify_emails = shop_email_settings.notify_email_addresses.split(",")
+        notify_emails = [
+            email.strip() for email in shop_email_settings.notify_email_addresses.split(",")
+        ]
     reply_to = [shop_email_settings.reply_to or settings.DEFAULT_FROM_EMAIL]
     return notify_emails, reply_to
 
@@ -89,7 +91,7 @@ def send_new_order_notifications(sender, instance, created, **kwargs):
 
         if notify_emails:
             subject = f"New shop order '{instance.ref}'"
-            message = "A new shop order has been receiveed."
+            message = "A new shop order has been received."
             email = EmailMessage(
                 subject,
                 message,
@@ -137,6 +139,6 @@ def post_delete_item(sender, instance, **kwargs):
 
 @receiver(post_save, sender=ProductVariant)
 def update_price(sender, instance, **kwargs):
-    if not instance.price:
+    if instance.price is None or instance.price == "":
         instance.price = instance.product.price
         instance.save()
