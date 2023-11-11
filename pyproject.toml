@@ -41,6 +41,36 @@ lines-after-imports = 2
 [tool.ruff.per-file-ignores]
 "manage.py" = ["INP001"]
 
-
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "pips_shop.settings"
+addopts = "--reuse-db"
+
+filterwarnings = [
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning:model_bakery"
+]
+env = [
+  "TESTING=1",
+  "SECRET_KEY=dummy_secret",
+  "EMAIL_HOST_USER=dummy_user",
+  "MAIL_HOST_PASSWORD=dummy_password",
+  "LOG_FOLDER=log_folder",
+  "DOMAIN=pips-shop.test",
+  "SALESMAN_STRIPE_SECRET_KEY=dummy",
+  "SALESMAN_STRIPE_WEBHOOK_SECRET=dummy",
+  "STRIPE_CONNECTED_ACCOUNT=dummy",
+]
+
+[tool.coverage.run]
+omit = [
+  "venv/*",
+  ".venv*/*",
+  "*/migrations/*",
+  "*/tests/*",
+  "*wsgi*",
+  "manage.py"
+]
+
+[tool.coverage.report]
+fail_under = 100
+skip_empty = true
+skip_covered = true
