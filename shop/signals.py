@@ -118,7 +118,7 @@ def post_save_item(sender, instance, **kwargs):
 
 
 @receiver(post_delete, sender=BasketItem)
-def post_delete_item(sender, instance, **kwargs):
+def post_delete_basket_item(sender, instance, **kwargs):
     if instance.product:
         instance.product.stock += instance.quantity
         instance.product.save()

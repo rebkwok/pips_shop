@@ -35,6 +35,17 @@ def test_product_variant_price_set_from_product(product):
     assert variant.price == 12
 
 
+def test_delete_basket_item_updates_stock(basket):
+    # item product variant has 5 in stock initially
+    # basket items contains 2, reduces stock to 3
+    basket_item = basket.items.first()
+    variant = basket_item.product
+    assert variant.stock == 3
+    # deleting the basket item puts the quanity back in stock
+    basket_item.delete()
+    assert variant.stock == 5
+
+
 @pytest.mark.parametrize(
     "payment_status,body_text",
     [

@@ -253,7 +253,7 @@ if TESTING or (env("LOCAL", False) and not env("LOCAL_S3", False)):
 # for media storage with s3
 AWS_STORAGE_BUCKET_NAME = f"media.{DOMAIN}"
 
-if env("LOCAL", False) or env("LOCAL_S3", False):
+if env("LOCAL", False) or env("LOCAL_S3", False):  # pragma: no cover
     AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
 
@@ -484,4 +484,4 @@ SALESMAN_STRIPE_DEFAULT_CURRENCY = 'gbp'
 
 SALESMAN_STRIPE_WEBHOOK_URL = "/stripe/webhook/"
 # Default paid status for fullfiled orders.
-# SALESMAN_STRIPE_PAID_STATUS = 'PROCESSING'
+SALESMAN_STRIPE_PAID_STATUS = 'PROCESSING'
