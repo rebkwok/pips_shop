@@ -16,7 +16,7 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
     path("shop/", include(shop_urls)),
-    path("stripe/webhook/", stripe_webhook_view, name="stripe-webhook"),
+    path("stripe/webhook/", stripe_webhook_view, name="shop-stripe-webhook"),
     path("api/", include("salesman.urls")),
 ]
 
