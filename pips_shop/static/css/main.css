@@ -267,15 +267,15 @@ figure img {
   margin: 40px auto 0;
   max-width: 1400px;
   border-radius: 0;
-  background-color: var(--wm-pink);
-  color: var(--white);
-  padding: 40px;
+  background-color: var(--wm-pink-transparent);
+  color: var(--wm-blue);
+  padding: 10px;
 }
 
 .alert > .alert__title {
-  color: var(--white);
+  color: var(--wm-blue);
   font-family: var(--font--primary);
-  font-size: 1.625rem;
+  font-size: 1.2rem;
   margin-bottom: 5px;
 }
 
@@ -283,6 +283,7 @@ figure img {
   list-style-type: none;
   margin: 0;
   padding-left: 0;
+  font-size: 1rem;
 }
 
 /* Hero image area */

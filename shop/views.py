@@ -1,6 +1,7 @@
 from urllib.parse import parse_qsl, urlparse
 import logging
 
+from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.template.response import TemplateResponse
@@ -376,10 +377,13 @@ def basket_timeout(request, basket_id):
         time_left = basket.timeout - timezone.now()
         if time_left.total_seconds() >= 0:
             return HttpResponse(f"{time_left.seconds // 60}m {time_left.seconds % 60}s")
+        # expired; timeout and redirect
         Basket.clear_expired()
-        return HttpResponse(
-            "<div></div><div id='basket-countdown-container' hx-swap-oob='true'>Basket has expired</div>"
-        )
+        messages.error(request, "Basket has expired")
+        redirect_url = reverse("shop:basket")
+        resp = HttpResponseRedirect(redirect_url)
+        resp.headers["HX-Redirect"] = redirect_url
+        return resp
     return HttpResponse(
         "<div></div><div id='basket-countdown-container' hx-swap-oob='true'></div>"
     )

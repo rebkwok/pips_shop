@@ -707,7 +707,8 @@ def test_basket_timeout_view(client, basket, freezer):
     # basket has expired
     freezer.move_to(datetime(2023, 10, 1, 12, 10, 30, tzinfo=timezone.utc))
     resp = client.get(url, headers=headers)
-    assert "Basket has expired" in resp.content.decode()
+    assert resp.status_code == 302
+    assert resp.url == reverse("shop:basket")
     assert not basket.items.exists()
 
     # basket has no items
