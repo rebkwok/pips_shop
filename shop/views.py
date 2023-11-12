@@ -1,13 +1,12 @@
-from datetime import datetime
-from urllib.parse import parse_qsl, urlparse, urlunparse
+from urllib.parse import parse_qsl, urlparse
 import logging
 
-import requests
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.template.response import TemplateResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import DetailView
 from salesman.basket.views import BasketViewSet
 from salesman.checkout.views import CheckoutViewSet
@@ -30,7 +29,9 @@ Order = get_salesman_model("Order")
 def get_basket(request):
     request.method = "GET"
     resp = BasketViewSet.as_view({"get": "list"})(request)
-    return resp.data
+    data = resp.data
+    data["timeout"] = Basket.objects.get(id=data["id"]).timeout
+    return data
 
 
 def get_basket_quantity(request):
@@ -294,8 +295,8 @@ def _basket_icon_html(request, quantity):
 
 
 def basket_view(request):
-    resp = BasketViewSet.as_view({"get": "list"})(request)
-    basket_context = get_basket_context(resp.data)
+    basket = get_basket(request)
+    basket_context = get_basket_context(basket)
     checkout_methods = CheckoutViewSet.as_view({"get": "list"})(request)
     payment_methods = checkout_methods.data["payment_methods"]
     shipping_methods = [("collect", "Collect in store"), ("deliver", "Delivery")]
@@ -337,8 +338,8 @@ def checkout_view(request):
         form = CheckoutForm(payment_method=payment_method, shipping_method=shipping_method)
 
     request.method = "GET"
-    resp = BasketViewSet.as_view({"get": "list"})(request)
-    context = {**context, "form": form, **get_basket_context(resp.data)}
+    basket = get_basket(request)
+    context = {**context, "form": form, **get_basket_context(basket)}
 
     return TemplateResponse(request, "shop/checkout.html", context)
 
@@ -367,3 +368,13 @@ def _order_status(request, token, new=False):
         
     }
     return TemplateResponse(request, "shop/order_status.html", context)
+
+
+def basket_timeout(request, basket_id):
+    basket = get_object_or_404(Basket, id=basket_id)
+    if basket.items.exists():
+        time_left = basket.timeout - timezone.now()
+        return HttpResponse(f"{time_left.seconds // 60}m {time_left.seconds % 60}s")
+    return HttpResponse(
+        "<div></div><div id='basket-countdown-container' hx-swap-oob='true'></div>"
+    )

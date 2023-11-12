@@ -44,7 +44,6 @@ class PayInAdvance(PaymentMethod):
         added to order.
         """
         basket.extra["name"] = request.POST.get("name")
-        basket.save()
         order = Order.objects.create_from_basket(basket, request, status="HOLD")
         basket.delete()
         url = reverse("salesman-order-last") + f"?token={order.token}"
@@ -55,6 +54,7 @@ class PayByStripe(StripePayment):
 
     def basket_payment(self, basket, request):
         basket.extra["name"] = request.POST.get("name")
+        # update will also reset timeout, so we now have 15 mins to process stripe
         basket.update(request)
         return super().basket_payment(basket, request)
 

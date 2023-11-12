@@ -131,6 +131,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "shop.middleware.clear_expired_baskets_middleware",
 ]
 
 ROOT_URLCONF = "pips_shop.urls"
@@ -485,3 +486,5 @@ SALESMAN_STRIPE_DEFAULT_CURRENCY = 'gbp'
 SALESMAN_STRIPE_WEBHOOK_URL = "/stripe/webhook/"
 # Default paid status for fullfiled orders.
 SALESMAN_STRIPE_PAID_STATUS = 'PROCESSING'
+
+BASKET_TIMEOUT_MINUTES = env.int("BASKET_TIMEOUT_MINUTES", 15)

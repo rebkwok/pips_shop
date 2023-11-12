@@ -1,9 +1,13 @@
+from datetime import timedelta
+
 import logging
+from django.conf import settings
 from django.db import models, transaction
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.safestring import mark_safe
+from django.utils import timezone
 from salesman.basket.models import BaseBasket, BaseBasketItem
 from salesman.orders.models import (
     BaseOrder,
@@ -73,6 +77,23 @@ class Basket(BaseBasket):
         choices=tuple(SHIPPING_METHODS.items()),
         default="collect"
     )
+    timeout = models.DateTimeField(null=True)
+
+    def update(self, request):
+        super().update(request)
+        self.reset_timeout()
+
+    def reset_timeout(self):
+        logger.info("Resetting basket timeout")
+        self.timeout = timezone.now() + timedelta(minutes=settings.BASKET_TIMEOUT_MINUTES)
+        self.save()
+
+    @classmethod
+    def clear_expired(cls):
+        expired = cls.objects.filter(timeout__lt=timezone.now())
+        for basket in expired:
+            basket.clear()
+        logger.info("Expired baskets cleared")
 
 
 class BasketItem(BaseBasketItem):
@@ -102,7 +123,7 @@ class CategoryPage(Page):
     ]
 
     parent_page_types = ["ShopPage"]
-    subpage_types = ["CategoryPage"]
+    subpage_types = ["CategoryPage", "home.StandardPage"]
 
     def get_product_count(self):
         return f"{self.live_products.count()} live ({self.page_products.count()} total)"
@@ -110,7 +131,7 @@ class CategoryPage(Page):
 
     @property
     def live_products(self):
-        # products are live if they are set to live AND have at least one live variant
+        # products are live if they are set to live AND have at least one live variants 
         return (
             self.page_products.filter(live=True, variants__isnull=False, variants__live=True)
             .order_by("index")

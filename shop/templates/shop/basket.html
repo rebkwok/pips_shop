@@ -1,15 +1,19 @@
 {% extends "shop/base.html" %}
-{% load wagtailcore_tags wagtailimages_tags %}
+{% load wagtailcore_tags wagtailimages_tags static %}
 
 {% block title %}Basket{% endblock %}
 
 
 {% block content %}
     {% include "includes/header-hero.html" %}
-
+    
+    {% if basket.items %}
+    <div class="basket-countdown-alert" id="basket-countdown-container">Basket will timeout in <span id="countdown" hx-get={% url 'shop:basket_timeout' basket.id %} hx-trigger="every 1s"><i class="far fa-clock"></i></span></div>
+    {% endif %}
     <div class="container shop-basket">
         <div class="row">
-                <h1>Basket</h1>
+            <div id="basket_timeout" style="display:none;">{{ basket.timeout|date:"d M Y H:i:s" }}</div>
+            <h1>Basket</h1>
                 {% if basket.items %}
                 <div class="col-md-12">
                     {% for product_identifier, items in basket.items.items %}

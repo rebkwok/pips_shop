@@ -2461,3 +2461,14 @@ input[type='radio'] {
 .carousel-indicators {
   bottom: -40px;
 }
+
+
+.basket-countdown-alert {
+  margin: 10px auto 10px;
+  max-width: 1400px;
+  border-radius: 0;
+  background-color: var(--wm-pink-transparent);
+  color: var(--dark-blue);
+  padding: 10px;
+  font-family: var(--font--primary);
+}
