@@ -374,7 +374,12 @@ def basket_timeout(request, basket_id):
     basket = get_object_or_404(Basket, id=basket_id)
     if basket.items.exists():
         time_left = basket.timeout - timezone.now()
-        return HttpResponse(f"{time_left.seconds // 60}m {time_left.seconds % 60}s")
+        if time_left.total_seconds() >= 0:
+            return HttpResponse(f"{time_left.seconds // 60}m {time_left.seconds % 60}s")
+        Basket.clear_expired()
+        return HttpResponse(
+            "<div></div><div id='basket-countdown-container' hx-swap-oob='true'>Basket has expired</div>"
+        )
     return HttpResponse(
         "<div></div><div id='basket-countdown-container' hx-swap-oob='true'></div>"
     )

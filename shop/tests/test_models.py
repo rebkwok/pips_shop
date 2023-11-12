@@ -1,7 +1,9 @@
+from datetime import timedelta
 import pytest
 from model_bakery import baker
 
 from django.test import RequestFactory
+from django.utils import timezone
 
 from salesman.core.utils import get_salesman_model
 
@@ -9,6 +11,8 @@ from .conftest import CategoryPageFactory
 
 
 pytestmark = pytest.mark.django_db
+
+Basket = get_salesman_model("Basket")
 
 
 def test_category(category_page):
@@ -161,3 +165,16 @@ def test_populate_order_from_basket(product):
     assert order.items.count() == 1 
     assert order.shipping_method == "collect"
     assert order.name == "Test user"
+
+
+def test_basket_timeout(basket, freezer):
+    # initial timeout is in future
+    assert basket.timeout > timezone.now()
+    # clearing basked has no effect
+    Basket.clear_expired()
+    assert basket.items.exists()
+    
+    # move time to more than 15 mins in future
+    freezer.move_to(timezone.now() + timedelta(minutes=20))
+    Basket.clear_expired()
+    assert not basket.items.exists()

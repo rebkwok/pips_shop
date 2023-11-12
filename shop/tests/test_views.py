@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from unittest import mock
 
 import pytest
@@ -41,7 +42,8 @@ def mock_as_view_resp(status_code, data):
     return MockAsViewResp
 
 
-def test_get_basket(rf):
+def test_get_basket(rf, freezer):
+    freezer.move_to("2023-10-10 10:00")
     request = rf.get('/')
     assert not Basket.objects.exists()
     basket_resp = get_basket(request)
@@ -52,7 +54,8 @@ def test_get_basket(rf):
         'id': Basket.objects.first().id,
         'items': [],
         'subtotal': '0.00',
-        'total': '0.00'
+        'total': '0.00',
+        'timeout': datetime(2023, 10, 10, 10, 15, tzinfo=timezone.utc)
     }
 
 
@@ -68,7 +71,8 @@ def test_get_basket_quantity_and_total(rf):
     assert basket_resp == (0, "0.00")
 
 
-def test_get_existing_empty_basket(rf):
+def test_get_existing_empty_basket(rf, freezer):
+    freezer.move_to("2023-10-10 10:00")
     basket = baker.make(Basket)
     request = rf.get('/')
     request.session = {"BASKET_ID": basket.id}
@@ -79,7 +83,8 @@ def test_get_existing_empty_basket(rf):
         'id': basket.id,
         'items': [],
         'subtotal': '0.00',
-        'total': '0.00'
+        'total': '0.00',
+        'timeout': datetime(2023, 10, 10, 10, 15, tzinfo=timezone.utc)
     }
 
 
@@ -88,6 +93,7 @@ def test_get_basket_with_items(rf, basket):
     request.session = {"BASKET_ID": basket.id}
     basket_resp = get_basket(request)
     basket_items = basket_resp.pop("items")
+    basket_resp.pop("timeout")
     assert basket_resp == {
         'extra': {'name': 'Test User'},
         'extra_rows': [],
@@ -674,3 +680,37 @@ def test_new_order_status_view(rf, order):
     assert resp.context_data["hide_basket"]
     assert resp.context_data["new_order"]
     assert "Thank you for your order!" in resp.rendered_content
+
+
+def test_basket_timeout_view(client, basket, freezer):
+    url = reverse("shop:basket_timeout", args=(basket.id,))
+    headers={"hx-request": True}
+    # Set current time
+    freezer.move_to(datetime(2023, 10, 1, 12, 0, tzinfo=timezone.utc))
+
+    # basket times out in 10 mins
+    basket.timeout = datetime(2023, 10, 1, 12, 10, tzinfo=timezone.utc)
+    basket.save()
+    resp = client.get(url, headers=headers)
+    assert resp.content.decode() == "10m 0s"
+
+    # basket times out in 5.5 mins
+    freezer.move_to(datetime(2023, 10, 1, 12, 4, 30, tzinfo=timezone.utc))
+    resp = client.get(url, headers=headers)
+    assert resp.content.decode() == "5m 30s"
+
+    # basket times out now
+    freezer.move_to(datetime(2023, 10, 1, 12, 10, tzinfo=timezone.utc))
+    resp = client.get(url, headers=headers)
+    assert resp.content.decode() == "0m 0s"
+
+    # basket has expired
+    freezer.move_to(datetime(2023, 10, 1, 12, 10, 30, tzinfo=timezone.utc))
+    resp = client.get(url, headers=headers)
+    assert "Basket has expired" in resp.content.decode()
+    assert not basket.items.exists()
+
+    # basket has no items
+    resp = client.get(url, headers=headers)
+    assert resp.content.decode() ==  "<div></div><div id='basket-countdown-container' hx-swap-oob='true'></div>"
+    
