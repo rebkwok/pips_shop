@@ -8,16 +8,21 @@
 
     <div class="container category-detail">
         <div class="row">            
-            <div class="col-md-12">
+            <div class="col">
                 <div class="container product-listing-card__container pt-2">
-                    <div class="product-listing-card__grid">
+                    <div>
                         {% include "shop/includes/product-listing-card.html" %}
                     </div>
                 </div>
+            </div>
+            {% if product.description %}
+            <div class="col">
                 <div class="container product-listing-card__container pt-0">
+                    <h3>Description</h3>
                     <p>{{ product.description|richtext }}</p>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 {% endblock content %}

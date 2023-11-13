@@ -239,6 +239,9 @@ class Product(ClusterableModel):
                 all_images.append(variant.image)
         return all_images
 
+    def get_absolute_url(self):
+        return reverse("shop:product_detail", kwargs={"pk": self.pk})
+
 
 class ProductVariant(Orderable):
     product = ParentalKey(

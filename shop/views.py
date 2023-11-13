@@ -101,6 +101,11 @@ class ProductDetailView(DetailView):
     template_name = "shop/shop_product_page.html"
     context_object_name = "product"
 
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data["detail_page"] = True
+        return context_data
+
 
 def decrease_quantity(request, product_id):        
     value = int(request.GET.get("quantity", 1))

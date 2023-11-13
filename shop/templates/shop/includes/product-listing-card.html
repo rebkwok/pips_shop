@@ -17,11 +17,17 @@
             <div class="carousel-inner">
                 {% for pimage in product.images %}
                 <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <a href="{{ pimage.file.url }}">
+                    {% if detail_page %}
+                        <a href="{{ pimage.file.url }}">
+                            <figure class="product-listing-card__image">
+                                {% image pimage fill-300x300-c100 loading="lazy" %}
+                            </figure>
+                        </a>
+                    {% else %}
                         <figure class="product-listing-card__image">
                             {% image pimage fill-180x180-c100 loading="lazy" class="d-block w-180" %}
                         </figure>
-                    </a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

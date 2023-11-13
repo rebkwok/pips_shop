@@ -17,7 +17,11 @@
                 <div class="container product-listing-card__container pt-2">
                     <div class="product-listing-card__grid">
                         {% for product in page.live_products %}
-                            {% include "shop/includes/product-listing-card.html" %}
+                            <div>
+                                <a href="{{ product.get_absolute_url }}">
+                                    {% include "shop/includes/product-listing-card.html" %}
+                                </a>
+                            </div>
                         {% endfor %}
                     </div>
                 </div>

@@ -4,6 +4,7 @@ from model_bakery import baker
 
 from django.test import RequestFactory
 from django.utils import timezone
+from django.urls import reverse
 
 from salesman.core.utils import get_salesman_model
 
@@ -39,6 +40,7 @@ def test_product(product):
     assert product.get_variant_count() == "0 live (0 total)"
     assert list(product.live_variants) == []
     assert product.identifier == "test-category-test-product"
+    assert product.get_absolute_url() == reverse("shop:product_detail", args=(product.id,))
 
 
 def test_product_variant(product):
