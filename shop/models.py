@@ -2,8 +2,9 @@ from datetime import timedelta
 
 import logging
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import models, transaction
-from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.safestring import mark_safe
@@ -137,7 +138,11 @@ class CategoryPage(Page):
             .order_by("index")
             .distinct()
         )
- 
+    
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
 
 class Product(ClusterableModel):
     """
@@ -375,3 +380,89 @@ class ShopSettings(BaseGenericSetting):
         FieldPanel("notify_email_addresses"),
         FieldPanel("reply_to"),
     ]
+
+
+class SaleCategory(models.Model):
+    """
+    A sale discount for a category
+    """
+    sale = ParentalKey("Sale", related_name="categories")
+    category = models.ForeignKey("CategoryPage", on_delete=models.CASCADE)
+    discount = models.PositiveIntegerField(default=10, validators=[MaxValueValidator(100)])
+
+    class Meta:
+        unique_together = ("sale", "category")
+
+
+class SaleProduct(models.Model):
+    """
+    A sale discount for a product
+    """
+    sale = ParentalKey("Sale", related_name="products")
+    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    discount = models.PositiveIntegerField(default=10, validators=[MaxValueValidator(100)])
+
+    class Meta:
+        unique_together = ("sale", "product")
+
+
+class Sale(ClusterableModel):
+
+    name = models.CharField(max_length=255)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    panels = [
+        HelpPanel(
+            """
+            Add Sales here. Only one sale can be live at any one time.
+            """
+        ),
+        FieldPanel('name'),
+        FieldPanel('start_date'),
+        FieldPanel('end_date'),
+        InlinePanel(
+            "categories", heading="Sale Categories", label="Category",
+            help_text="Define discounts to apply to entire categories of products.",
+        ),
+        InlinePanel(
+            "products", heading="Sale Products", label="Product",
+            help_text=(
+                "Define discounts for specific products. Note that if a product's category is also on sale, any "
+                "discount defined here will override it. To exclude certain products from a category sale, define them "
+                "here with a discount of 0."
+            )    
+        ),
+    ]
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gt=models.F('start_date')),
+                name="start_before_end_constraint"
+            )
+        ]
+
+
+    @classmethod
+    def current_sale(cls):
+        live_sales = cls.objects.filter(
+            start_date__lte=timezone.now(), end_date__gt=timezone.now()
+        )
+        if live_sales.exists():
+            return live_sales.first()
+
+    def __str__(self):
+        return f"{self.name} ({self.start_date.strftime('%d%b%y')} - {self.end_date.strftime('%d%b%y')})" 
+
+    def clean(self):
+        if not self.id:
+            within_these_dates = Sale.objects.exclude(end_date__lt=self.start_date).exclude(start_date__gt=self.end_date)
+            if within_these_dates.exists():
+                existing = within_these_dates.first()
+                raise(ValidationError(f"A sale already exists for some of these dates ({existing})"))
+        return super().clean()
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

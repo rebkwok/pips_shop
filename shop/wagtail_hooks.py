@@ -6,7 +6,7 @@ from wagtail.contrib.modeladmin.options import modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
 
-from .models import Product, ProductVariant
+from .models import Product, ProductVariant, Sale, SaleCategory, SaleProduct
 
 
 Order = get_salesman_model("Order")
@@ -30,10 +30,19 @@ class ProductVariantViewSet(SnippetViewSet):
     list_filter = ("product",)
 
 
+class SaleViewSet(SnippetViewSet):
+    model = Sale
+    list_display = (
+        "name",
+        "start_date",
+        "end_date",
+    )
+
+
 class ProductGroup(SnippetViewSetGroup):
     menu_label = "Shop Stock"
     menu_icon = "pick"
-    items = (ProductViewSet, ProductVariantViewSet)
+    items = (ProductViewSet, ProductVariantViewSet, SaleViewSet)
     menu_order = 200
 
 
