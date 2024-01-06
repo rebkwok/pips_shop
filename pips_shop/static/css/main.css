@@ -813,9 +813,9 @@ li.has-submenu a.allow-toggle {
   padding: 10px 10px 15px 5px !important;
 }
 
-.caret-custom::after {
+/* .caret-custom::after {
   content: '▼' !important;
-}
+} */
 
 /* Mobile menu styling */
 @media (max-width: 1150px) {
@@ -2472,4 +2472,8 @@ input[type='radio'] {
   color: var(--dark-blue);
   padding: 10px;
   font-family: var(--font--primary);
+}
+
+.text-strikethrough {
+  text-decoration: line-through;
 }

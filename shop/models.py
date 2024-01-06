@@ -319,6 +319,26 @@ class ProductVariant(Orderable):
     category_link.admin_order_field = "product__category_page__title"
     category_link.short_description = "Category"
     
+    def get_sale_item(self):
+        """
+        Is this product variant currently on sale?
+        Return a sale item (SaleCategory or SaleProduct) or None
+        """
+        current_sale = Sale.current_sale()
+        if current_sale:
+            # Look for products on sale first; these can override their category discounts
+            sale_products = current_sale.products.filter(product__id=self.product.id)
+            if sale_products.exists():
+                # A product with a discount of 0 is intended to remove this product from the sale altogether,
+                # even if its overall category is on dale
+                if sale_products.first().discount == 0:
+                    return None
+                return sale_products.first()
+            sale_categories = current_sale.categories.filter(category__id=self.product.category_page.id)
+            if sale_categories.exists():
+                return sale_categories.first()
+
+
     @property
     def code(self):
         return str(self.id)

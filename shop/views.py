@@ -231,9 +231,12 @@ def update_quantity(request, ref):
                 {"extra_rows": basket["extra_rows"]},
                 request,
             )
-            subtotal = get_basket_item(basket, product_id).get("subtotal", 0)
+            basket_item = get_basket_item(basket, product_id)
+            subtotal = basket_item.get("subtotal", 0)
+            total = basket_item.get("total", 0)
             result_html = f"""
                 <span id='subtotal_{product_id}' hx-swap-oob='true'>{subtotal}</span>
+                <span id='total_{product_id}' hx-swap-oob='true'>{total}</span>
                 <span id='quantity_{product_id}' hx-swap-oob='true'>{resp.data['quantity']}</span>
                 <span id='total' hx-swap-oob='true'>{basket['total']}</span>
                 <div id='updated_{product_id}' class='alert-success' hx-swap-oob='true'>Basket updated</div>

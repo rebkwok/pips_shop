@@ -465,6 +465,7 @@ SALESMAN_PAYMENT_METHODS = [
 ]
 SALESMAN_BASKET_MODIFIERS = [
     "shop.modifiers.ShippingCostModifier",
+    "shop.modifiers.SaleModifier",
 ]
 
 # for crispy forms
