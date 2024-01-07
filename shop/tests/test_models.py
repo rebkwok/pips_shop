@@ -104,6 +104,35 @@ def test_product_variant_str(
     assert variant.name_and_price() == expected_name_and_price
 
 
+
+
+@pytest.mark.parametrize(
+    "variant_name,colour,size,expected_str,expected_name_and_price",
+    [
+        (None, None, None, "Test Product", "£8.00 (was £10)"),
+        ("Mug", None, None, "Test Product - Mug", "Mug - £8.00 (was £10)"),
+        (None, "Green", None, "Test Product - Green", "Green - £8.00 (was £10)"),
+        ("T-shirt", None, "S", "Test Product - T-shirt - S", "T-shirt - S - £8.00 (was £10)"),
+    ],
+)
+def test_product_variant_str_with_sale(
+    freezer, sale_with_items, product, variant_name, colour, size, expected_str, expected_name_and_price
+):  
+    freezer.move_to("2022-01-01 09:00")
+    variant = baker.make(
+        "shop.ProductVariant", product=product, variant_name=variant_name, price=10
+    )
+    if colour:
+        variant.colour = colour
+        variant.save()
+    if size:
+        variant.size = size
+        variant.save()
+
+    assert str(variant) == variant.name == expected_str
+    assert variant.name_and_price() == expected_name_and_price
+
+
 def test_live_products(category_page, product):
     # product is live
     assert product.live

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 import logging
 from django.conf import settings
@@ -319,9 +320,14 @@ class ProductVariant(Orderable):
         return self.price
 
     def name_and_price(self):
+        discounted_price = self.get_discounted_price()
+        if discounted_price:
+            price_str = f"£{discounted_price} (was £{self.price})" 
+        else:
+            price_str = f"£{self.price}"
         if self.variant_full_name():
-            return f"{self.variant_full_name()} - £{self.price}"
-        return f"£{self.price}"
+            return f"{self.variant_full_name()} - {price_str}"
+        return (f"{price_str}")
 
     def category_link(self):
         return mark_safe(
@@ -352,6 +358,12 @@ class ProductVariant(Orderable):
             )
             if sale_categories.exists():
                 return sale_categories.first()
+
+    def get_discounted_price(self):
+        sale_item = self.get_sale_item()
+        if sale_item:
+            discount = (self.price * Decimal(sale_item.discount / 100)).quantize(Decimal("0.01"))
+            return self.price - discount
 
     @property
     def code(self):
