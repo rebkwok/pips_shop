@@ -1,4 +1,3 @@
-
 import pytest
 from model_bakery import baker
 
@@ -14,7 +13,10 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def shop_settings():
-    baker.make("shop.ShopSettings", notify_email_addresses="admin@test.com, another_admin@test.com")
+    baker.make(
+        "shop.ShopSettings",
+        notify_email_addresses="admin@test.com, another_admin@test.com",
+    )
 
 
 def checkout_basket(basket, payment_method):
@@ -31,7 +33,9 @@ def checkout_basket(basket, payment_method):
 
 
 def test_product_variant_price_set_from_product(product):
-    variant = baker.make("shop.ProductVariant", product=product, variant_name="Small", price=None)
+    variant = baker.make(
+        "shop.ProductVariant", product=product, variant_name="Small", price=None
+    )
     assert variant.price == 12
 
 
@@ -50,39 +54,31 @@ def test_delete_basket_item_updates_stock(basket):
     "payment_status,body_text",
     [
         (
-            Order.Status.HOLD, 
-            "Your order will be completed when payment has been received"
+            Order.Status.HOLD,
+            "Your order will be completed when payment has been received",
         ),
-        (
-            Order.Status.PROCESSING, 
-            "Your order is being processed"
-        ),
-    ]
+        (Order.Status.PROCESSING, "Your order is being processed"),
+    ],
 )
-def test_emails_on_order_creation_no_shop_email_setting(
-    payment_status, body_text
-):
+def test_emails_on_order_creation_no_shop_email_setting(payment_status, body_text):
     new_order = baker.make(Order, status=payment_status, email="test@test.com")
     # email to customer only
     assert len(mail.outbox) == 1
     customer_email = mail.outbox[0]
     assert customer_email.to == ["test@test.com"]
     assert customer_email.subject == f"Order '{new_order.ref}' has been received"
-    assert body_text in customer_email.body 
+    assert body_text in customer_email.body
 
 
 @pytest.mark.parametrize(
     "payment_status,body_text",
     [
         (
-            Order.Status.HOLD, 
-            "Your order will be completed when payment has been received"
+            Order.Status.HOLD,
+            "Your order will be completed when payment has been received",
         ),
-        (
-            Order.Status.PROCESSING, 
-            "Your order is being processed"
-        ),
-    ]
+        (Order.Status.PROCESSING, "Your order is being processed"),
+    ],
 )
 def test_emails_on_order_creation_with_shop_email_setting(
     payment_status, body_text, shop_settings
@@ -102,34 +98,11 @@ def test_emails_on_order_creation_with_shop_email_setting(
 @pytest.mark.parametrize(
     "payment_status,new_payment_status,email_sent,subject",
     [
-        (
-            Order.Status.HOLD, 
-            Order.Status.HOLD,
-            False,
-            None
-        ),
-        (
-            Order.Status.HOLD, 
-            Order.Status.PROCESSING,
-            True,
-            "is being processed"
-            
-        ),
-        (
-            Order.Status.HOLD, 
-            Order.Status.COMPLETED,
-            True,
-            "is completed"
-            
-        ),
-        (
-            Order.Status.PROCESSING, 
-            Order.Status.COMPLETED,
-            True,
-            "is completed"
-        ),
-        
-    ]
+        (Order.Status.HOLD, Order.Status.HOLD, False, None),
+        (Order.Status.HOLD, Order.Status.PROCESSING, True, "is being processed"),
+        (Order.Status.HOLD, Order.Status.COMPLETED, True, "is completed"),
+        (Order.Status.PROCESSING, Order.Status.COMPLETED, True, "is completed"),
+    ],
 )
 def test_emails_on_order_status_change(
     payment_status, new_payment_status, email_sent, subject
@@ -138,7 +111,7 @@ def test_emails_on_order_status_change(
     new_order = baker.make(Order, status=payment_status, email="test@test.com")
     # email to customer only
     assert len(mail.outbox) == 1
-    
+
     new_order.status = new_payment_status
     new_order.save()
     if email_sent:
@@ -152,34 +125,11 @@ def test_emails_on_order_status_change(
 @pytest.mark.parametrize(
     "payment_status,new_payment_status,email_sent,subject",
     [
-        (
-            Order.Status.HOLD, 
-            Order.Status.HOLD,
-            False,
-            None
-        ),
-        (
-            Order.Status.HOLD, 
-            Order.Status.PROCESSING,
-            True,
-            "is being processed"
-            
-        ),
-        (
-            Order.Status.HOLD, 
-            Order.Status.COMPLETED,
-            True,
-            "is completed"
-            
-        ),
-        (
-            Order.Status.PROCESSING, 
-            Order.Status.COMPLETED,
-            True,
-            "is completed"
-        ),
-        
-    ]
+        (Order.Status.HOLD, Order.Status.HOLD, False, None),
+        (Order.Status.HOLD, Order.Status.PROCESSING, True, "is being processed"),
+        (Order.Status.HOLD, Order.Status.COMPLETED, True, "is completed"),
+        (Order.Status.PROCESSING, Order.Status.COMPLETED, True, "is completed"),
+    ],
 )
 def test_emails_on_order_status_change_with_shop_settings(
     shop_settings, payment_status, new_payment_status, email_sent, subject
@@ -188,7 +138,7 @@ def test_emails_on_order_status_change_with_shop_settings(
     new_order = baker.make(Order, status=payment_status, email="test@test.com")
     # email to customer and admins
     assert len(mail.outbox) == 2
-    
+
     new_order.status = new_payment_status
     new_order.save()
     if email_sent:

@@ -43,26 +43,30 @@ def basket_from_checkout(basket):
     }
     return basket
 
+
 @pytest.fixture
 def mock_stripe(requests_mock):
     # mock the stripe requests
     # These are used for basket payment
     requests_mock.post(
-        "https://api.stripe.com/v1/customers", json={"id": "customer-id-1", "email": "test@test.com"}
+        "https://api.stripe.com/v1/customers",
+        json={"id": "customer-id-1", "email": "test@test.com"},
     )
     requests_mock.post(
-        "https://api.stripe.com/v1/checkout/sessions", json={"url": "https://stripe-session-url"}
+        "https://api.stripe.com/v1/checkout/sessions",
+        json={"url": "https://stripe-session-url"},
     )
     # These are used for getting stripe session data
     requests_mock.get(
-        "https://api.stripe.com/v1/checkout/sessions/test-session", 
+        "https://api.stripe.com/v1/checkout/sessions/test-session",
         json={
             "customer": "customer-id-1",
             "amount_total": 2000,
-        }
+        },
     )
     requests_mock.get(
-        "https://api.stripe.com/v1/customers/customer-id-1", json={"email": "test@test.com"}
+        "https://api.stripe.com/v1/customers/customer-id-1",
+        json={"email": "test@test.com"},
     )
 
 
@@ -84,25 +88,26 @@ def test_get_stripe_session_data(rf, mock_stripe, basket):
     assert payment.get_stripe_session_data(basket, request) == {
         "mode": "payment",
         "cancel_url": f"{request.build_absolute_uri()}api/payment/stripe/cancel/",
-        "success_url": f"{request.build_absolute_uri()}api/payment/stripe/success/" + "?session_id={CHECKOUT_SESSION_ID}",
+        "success_url": f"{request.build_absolute_uri()}api/payment/stripe/success/"
+        + "?session_id={CHECKOUT_SESSION_ID}",
         "client_reference_id": f"basket_{basket.id}",
         "customer": "customer-id-1",
         "line_items": [
             {
-                'price_data': {
-                    'currency': 'gbp', 
-                    'unit_amount': 2000, 
-                    'product_data': {
-                        'name': 'Purchase 1 items', 
-                        'description': '2x Test Product - Small'
-                    }
-                }, 
-                'quantity': 1
+                "price_data": {
+                    "currency": "gbp",
+                    "unit_amount": 2000,
+                    "product_data": {
+                        "name": "Purchase 1 items",
+                        "description": "2x Test Product - Small",
+                    },
+                },
+                "quantity": 1,
             }
         ],
         "payment_intent_data": {
             "on_behalf_of": settings.STRIPE_CONNECTED_ACCOUNT,
-            "transfer_data": {"destination": settings.STRIPE_CONNECTED_ACCOUNT}
+            "transfer_data": {"destination": settings.STRIPE_CONNECTED_ACCOUNT},
         },
         "metadata": {"shipping_method": "collect"},
     }
@@ -110,16 +115,17 @@ def test_get_stripe_session_data(rf, mock_stripe, basket):
 
 def test_cancel_view(rf):
     request = rf.get("/")
-    resp =  PayByStripe.cancel_view(request)
+    resp = PayByStripe.cancel_view(request)
     assert "Your payment was cancelled" in resp.content.decode()
 
 
 def test_success_view(rf, mock_stripe):
     request = rf.get("/?session_id=test-session")
-    resp =  PayByStripe.success_view(request)
+    resp = PayByStripe.success_view(request)
     content = resp.content.decode()
     assert "You have been charged £20.00" in content
     assert "Your order confirmation has been emailed to test@test.com" in content
+
 
 # {
 #   "id": "evt_1MqqbKLt4dXK03v5qaIbiNCC",
@@ -299,27 +305,30 @@ def test_success_view(rf, mock_stripe):
 
 from unittest.mock import Mock, patch
 
+
 @pytest.fixture
 def get_mock_stripe_session():
     def stripe_session(**params):
         defaults = {"payment_intent": "payment-intent-id"}
         options = {**defaults, **params}
         return Mock(**options)
+
     return stripe_session
 
 
 @pytest.fixture
 def get_mock_webhook_event(get_mock_stripe_session):
     def mock_webhook_event(**params):
-        webhook_event_type = params.pop("webhook_event_type", "checkout.session.completed")
+        webhook_event_type = params.pop(
+            "webhook_event_type", "checkout.session.completed"
+        )
         mock_event = Mock(
             account=settings.STRIPE_CONNECTED_ACCOUNT,
-            data=Mock(
-                object=get_mock_stripe_session(**params)
-                ), 
-                type=webhook_event_type
+            data=Mock(object=get_mock_stripe_session(**params)),
+            type=webhook_event_type,
         )
         return mock_event
+
     return mock_webhook_event
 
 
@@ -328,7 +337,7 @@ def test_webhook_completed(mock_webhook, client, basket, get_mock_webhook_event)
     assert not Order.objects.exists()
     basket = basket_from_checkout(basket)
     now = datetime.utcnow()
-    headers = {'STRIPE_SIGNATURE': f'v1=dummy,t={int(now.timestamp())}'}
+    headers = {"STRIPE_SIGNATURE": f"v1=dummy,t={int(now.timestamp())}"}
     mock_webhook.construct_event.return_value = get_mock_webhook_event(
         client_reference_id=f"basket_{basket.id}",
         amount_total=basket.total * 100,  # basket total in p for stripe
@@ -346,7 +355,7 @@ def test_webhook_completed(mock_webhook, client, basket, get_mock_webhook_event)
 @patch("salesman_stripe.payment.stripe.Webhook")
 def test_webhook_other_status_ignored(mock_webhook, client, get_mock_webhook_event):
     now = datetime.utcnow()
-    headers = {'STRIPE_SIGNATURE': f'v1=dummy,t={int(now.timestamp())}'}
+    headers = {"STRIPE_SIGNATURE": f"v1=dummy,t={int(now.timestamp())}"}
     mock_webhook.construct_event.return_value = get_mock_webhook_event(
         webhook_event_type="checkout.session.unknown",
         client_reference_id=f"basket_1",
