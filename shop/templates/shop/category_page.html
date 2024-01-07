@@ -7,8 +7,13 @@
 
     <div class="container category-detail">
         <div class="row">            
-            
+
             <div class="col-md-12">
+                    {% for childpage in page.get_children %}
+                        <i class="fas fa-grip-lines-vertical wm-pink"></i> <a href="{% pageurl childpage %}">
+                            {{ childpage.title }}
+                        </a>
+                    {% endfor %}
                     {% if page.body %}
                         <p class="category-detail__body">
                             {{ page.body|richtext }}
