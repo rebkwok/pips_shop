@@ -51,7 +51,6 @@ class PayInAdvance(PaymentMethod):
 
 
 class PayByStripe(StripePayment):
-
     def basket_payment(self, basket, request):
         basket.extra["name"] = request.POST.get("name")
         # update will also reset timeout, so we now have 15 mins to process stripe
@@ -59,8 +58,8 @@ class PayByStripe(StripePayment):
         return super().basket_payment(basket, request)
 
     def get_stripe_session_data(
-        self, 
-        obj, # BasketOrOrder,
+        self,
+        obj,  # BasketOrOrder,
         request,
     ):
         """
@@ -76,14 +75,14 @@ class PayByStripe(StripePayment):
             "on_behalf_of": connected_stripe_account_id,
             "transfer_data": {
                 "destination": connected_stripe_account_id,
-            }
+            },
         }
         # add in the shipping method
-        session_data["metadata"] = {"shipping_method": obj.shipping_method} 
+        session_data["metadata"] = {"shipping_method": obj.shipping_method}
         # return the session id
-        session_data["success_url"] += "?session_id={CHECKOUT_SESSION_ID}"   
+        session_data["success_url"] += "?session_id={CHECKOUT_SESSION_ID}"
         return session_data
-    
+
     @classmethod
     def cancel_view(cls, request):
         """
@@ -99,7 +98,7 @@ class PayByStripe(StripePayment):
         checkout_session_id = request.GET.get("session_id")
         session = stripe.checkout.Session.retrieve(checkout_session_id)
         customer = stripe.Customer.retrieve(session.customer)
-        context = {"email": customer.email, "total": session.amount_total / 100 }
+        context = {"email": customer.email, "total": session.amount_total / 100}
         return render(request, "shop/stripe_success.html", context)
 
 

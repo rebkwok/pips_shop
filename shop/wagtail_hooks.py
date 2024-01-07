@@ -26,7 +26,14 @@ class ProductViewSet(SnippetViewSet):
 
 class ProductVariantViewSet(SnippetViewSet):
     model = ProductVariant
-    list_display = ("product", "variant_full_name", "category_link", "price", "stock", BooleanColumn("live"))
+    list_display = (
+        "product",
+        "variant_full_name",
+        "category_link",
+        "price",
+        "stock",
+        BooleanColumn("live"),
+    )
     list_filter = ("product",)
 
 
@@ -51,7 +58,9 @@ class OrderAdmin(SalesmanOrderAdmin):
     SalesmanOrderAdmin.list_display.insert(4, "shipping_method")
     SalesmanOrderAdmin.search_fields.append("name")
     SalesmanOrderAdmin.default_panels[2].children.insert(2, ReadOnlyPanel("name"))
-    SalesmanOrderAdmin.default_panels[2].children.insert(3, ReadOnlyPanel("shipping_method"))
+    SalesmanOrderAdmin.default_panels[2].children.insert(
+        3, ReadOnlyPanel("shipping_method")
+    )
     menu_order = 250
 
 

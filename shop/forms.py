@@ -32,7 +32,7 @@ class CheckoutForm(forms.Form):
         if shipping_method != "collect":
             shipping_address_layout = "shipping_address"
         else:
-            shipping_address_layout = Hidden("shipping_address", "-")            
+            shipping_address_layout = Hidden("shipping_address", "-")
 
         self.helper.layout = Layout(
             Hidden("payment_method", payment_method),
@@ -50,7 +50,5 @@ class CheckoutForm(forms.Form):
         email = cleaned_data.get("email")
         email1 = cleaned_data.get("email1")
         if email != email1:
-            self.add_error(
-                "email1", "Email fields do not match"
-            )
+            self.add_error("email1", "Email fields do not match")
         return cleaned_data

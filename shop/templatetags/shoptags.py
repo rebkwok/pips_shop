@@ -30,12 +30,14 @@ def shop_breadcrumbs(context):
         # skip this for products so we can add in the category
         ancestors = ()
     else:
-        # is it a product or other shop page            
+        # is it a product or other shop page
         if current_page in path_to_current_page or current_page == "product":
             self = ShopPage.objects.latest("id")
             this_page = path_to_current_page.get(current_page, context["product"].name)
-        
-        ancestors = list(Page.objects.ancestor_of(self, inclusive=True).filter(depth__gt=1))
+
+        ancestors = list(
+            Page.objects.ancestor_of(self, inclusive=True).filter(depth__gt=1)
+        )
         if current_page == "product":
             ancestors.append(context["product"].category_page)
 

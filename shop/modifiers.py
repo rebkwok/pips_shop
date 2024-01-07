@@ -4,6 +4,7 @@ from salesman.basket.modifiers import BasketModifier
 
 from .models import Sale
 
+
 class ShippingCostModifier(BasketModifier):
     """
     Add flat shipping cost to the basket.

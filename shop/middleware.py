@@ -1,4 +1,5 @@
 from salesman.core.utils import get_salesman_model
+
 Basket = get_salesman_model("Basket")
 
 

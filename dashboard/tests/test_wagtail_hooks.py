@@ -13,15 +13,17 @@ def test_collections_admin_menu_item(client, admin_user, home_page):
     props = soup.find("script", id="wagtail-sidebar-props")
     content = json.loads(props.contents[0])
     main_menu_module = [
-        module for module in content["modules"] 
+        module
+        for module in content["modules"]
         if module["_type"] == "wagtail.sidebar.MainMenuModule"
     ]
     # the first one is the main side bar (following by account section and admin link)
     side_bar_items = main_menu_module[0]["_args"][0]
-    
+
     # get all the labels, ignoring submenus
     top_level_side_bar_labels = {
-        arg_["label"] for item in side_bar_items
+        arg_["label"]
+        for item in side_bar_items
         for arg_ in item["_args"]
         if isinstance(arg_, dict)
     }

@@ -21,7 +21,8 @@ def get_email_settings():
     notify_emails = shop_email_settings.notify_email_addresses
     if notify_emails:
         notify_emails = [
-            email.strip() for email in shop_email_settings.notify_email_addresses.split(",")
+            email.strip()
+            for email in shop_email_settings.notify_email_addresses.split(",")
         ]
     reply_to = [shop_email_settings.reply_to or settings.DEFAULT_FROM_EMAIL]
     return notify_emails, reply_to
@@ -64,7 +65,9 @@ def send_new_order_notifications(sender, instance, created, **kwargs):
     """
     Send notification to customer when order is first created
     """
-    status_url = f'{settings.DOMAIN}{reverse("shop:order_status", args=(instance.token,))}'
+    status_url = (
+        f'{settings.DOMAIN}{reverse("shop:order_status", args=(instance.token,))}'
+    )
     if created:
         notify_emails, reply_to = get_email_settings()
 
@@ -127,7 +130,9 @@ def post_delete_basket_item(sender, instance, **kwargs):
 @receiver(post_delete, sender=Basket)
 def post_delete_item(sender, instance, **kwargs):
     if "basket_id" in instance.extra:
-        matching_order = Order.objects.filter(_extra__basket_id=instance.extra["basket_id"])
+        matching_order = Order.objects.filter(
+            _extra__basket_id=instance.extra["basket_id"]
+        )
         if matching_order.exists():
             order = matching_order.first()
             # basket deleted post-order creation, items from basket have been replaced
