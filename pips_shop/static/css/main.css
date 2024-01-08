@@ -45,6 +45,10 @@ each detail view
   --font-md: 1.125rem;
 }
 
+.wm-pink {
+  color: var(--wm-pink)
+}
+
 html {
   font-size: 16px;
 }
@@ -791,6 +795,10 @@ a.navigation__logo > img {
   border: transparent;
 }
 
+.dropdown-menu > li {
+  padding: 7px 10px;
+}
+
 .dropdown-menu > li > a {
   border-bottom: 1px solid var(--border-grey);
   color: var(--wm-blue);
@@ -813,9 +821,9 @@ li.has-submenu a.allow-toggle {
   padding: 10px 10px 15px 5px !important;
 }
 
-.caret-custom::after {
+/* .caret-custom::after {
   content: '▼' !important;
-}
+} */
 
 /* Mobile menu styling */
 @media (max-width: 1150px) {
@@ -2472,4 +2480,8 @@ input[type='radio'] {
   color: var(--dark-blue);
   padding: 10px;
   font-family: var(--font--primary);
+}
+
+.text-strikethrough {
+  text-decoration: line-through;
 }

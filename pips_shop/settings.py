@@ -26,7 +26,7 @@ env = environ.Env(
     LOCAL=(bool, False),
     TESTING=(bool, False),
     CI=(bool, False),
-    LOCAL_S3=(bool, False)
+    LOCAL_S3=(bool, False),
 )
 
 environ.Env.read_env(root("pips_shop/.env"))  # reading .env file
@@ -59,19 +59,18 @@ else:  # pragma: no cover
 
 DOMAIN = env.str("DOMAIN")
 ALLOWED_HOSTS = [
-    DOMAIN, 
-    f'www.{DOMAIN}', 
+    DOMAIN,
+    f"www.{DOMAIN}",
     f"vagrant.{DOMAIN}",
     f"www.vagrant.{DOMAIN}",
 ]
 # https://docs.djangoproject.com/en/4.0/ref/settings/#std:setting-CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
-    f'https://{DOMAIN}', 
-    f'https://*.{DOMAIN}', 
-    f'https://vagrant.{DOMAIN}',
-    f'https://*.vagrant.{DOMAIN}',
+    f"https://{DOMAIN}",
+    f"https://*.{DOMAIN}",
+    f"https://vagrant.{DOMAIN}",
+    f"https://*.vagrant.{DOMAIN}",
 ]
-
 
 
 if env("LOCAL"):  # pragma: no cover
@@ -206,19 +205,19 @@ USE_TZ = True
 SHORT_DATETIME_FORMAT = "d-M-Y H:i"
 SHORT_DATE_FORMAT = "d-M-Y"
 
-if TESTING or env('LOCAL') or env('CI'):  # use local cache for tests
+if TESTING or env("LOCAL") or env("CI"):  # use local cache for tests
     CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'pips_shop',
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "pips_shop",
         }
     }
 else:  # pragma: no cover
     CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-            'LOCATION': '127.0.0.1:11211',
-            'KEY_PREFIX': 'pips_shop',
+        "default": {
+            "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+            "LOCATION": "127.0.0.1:11211",
+            "KEY_PREFIX": "pips_shop",
         }
     }
 
@@ -439,7 +438,7 @@ WAGTAILSEARCH_BACKENDS = {
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = f'https://{DOMAIN}'
+WAGTAILADMIN_BASE_URL = f"https://{DOMAIN}"
 
 
 WAGTAILIMAGES_JPEG_QUALITY = 65
@@ -465,26 +464,27 @@ SALESMAN_PAYMENT_METHODS = [
 ]
 SALESMAN_BASKET_MODIFIERS = [
     "shop.modifiers.ShippingCostModifier",
+    "shop.modifiers.SaleModifier",
 ]
 
 # for crispy forms
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 USE_CRISPY = True
 
-SALESMAN_STRIPE_SECRET_KEY=env.str("SALESMAN_STRIPE_SECRET_KEY")
-SALESMAN_STRIPE_WEBHOOK_SECRET=env.str("SALESMAN_STRIPE_WEBHOOK_SECRET")
+SALESMAN_STRIPE_SECRET_KEY = env.str("SALESMAN_STRIPE_SECRET_KEY")
+SALESMAN_STRIPE_WEBHOOK_SECRET = env.str("SALESMAN_STRIPE_WEBHOOK_SECRET")
 
 # Account ID for Stripe connect account
-STRIPE_CONNECTED_ACCOUNT=env.str("STRIPE_CONNECTED_ACCOUNT")
+STRIPE_CONNECTED_ACCOUNT = env.str("STRIPE_CONNECTED_ACCOUNT")
 
 # Payment method label used when displayed in the basket.
-SALESMAN_STRIPE_PAYMENT_LABEL = 'Pay with Stripe'
+SALESMAN_STRIPE_PAYMENT_LABEL = "Pay with Stripe"
 
 # Default ISO currency used for payments (https://stripe.com/docs/currencies)
-SALESMAN_STRIPE_DEFAULT_CURRENCY = 'gbp'
+SALESMAN_STRIPE_DEFAULT_CURRENCY = "gbp"
 
 SALESMAN_STRIPE_WEBHOOK_URL = "/stripe/webhook/"
 # Default paid status for fullfiled orders.
-SALESMAN_STRIPE_PAID_STATUS = 'PROCESSING'
+SALESMAN_STRIPE_PAID_STATUS = "PROCESSING"
 
 BASKET_TIMEOUT_MINUTES = env.int("BASKET_TIMEOUT_MINUTES", 15)

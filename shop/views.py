@@ -53,9 +53,14 @@ def get_basket_item(basket, product_id):
     if not basket["items"]:
         return {}
     return next(
-        (item for item in basket["items"] if int(item["product_id"]) == int(product_id)),
-        {}
+        (
+            item
+            for item in basket["items"]
+            if int(item["product_id"]) == int(product_id)
+        ),
+        {},
     )
+
 
 def get_basket_context(basket):
     basket_quantity = _get_basket_quantity(basket)
@@ -76,11 +81,13 @@ def _get_basket_quantity(basket):
 def _can_increase_quantity(request, variant, value, in_basket=False):
     # value is the amount we want to change TO (may actually be a decrease if we're in the basket)
     if in_basket:
-        # increasing a value from the basket; current basket quantity 
+        # increasing a value from the basket; current basket quantity
         # is already incorporated into stock numbers
         # we need to check the actual basket quantity because user may have increase/decreased
         # value in the form field without actually updating
-        current_quantity = get_basket_item(get_basket(request), variant.id).get("quantity", 0)
+        current_quantity = get_basket_item(get_basket(request), variant.id).get(
+            "quantity", 0
+        )
         logger.info("Current quantity %s", current_quantity)
         logger.info("Stock %s", variant.stock)
         logger.info("New quantity %s", value)
@@ -107,7 +114,7 @@ class ProductDetailView(DetailView):
         return context_data
 
 
-def decrease_quantity(request, product_id):        
+def decrease_quantity(request, product_id):
     value = int(request.GET.get("quantity", 1))
     if value > 1:
         value -= 1
@@ -146,7 +153,7 @@ def _change_quantity(request, product_id, new_value, can_increase=True):
         resp = HttpResponse(resp_str)
         return resp
     resp = HttpResponse(resp_str)
-    resp.headers['HX-Trigger'] = "quantity-changed"
+    resp.headers["HX-Trigger"] = "quantity-changed"
     return resp
 
 
@@ -157,7 +164,7 @@ def add_to_basket(request, product_id):
     # check we can increase
 
     # add_to_basket is called from the shop page, not the basket page; we're
-    # adding this entire quantity to the basket, but we're not incrementing 
+    # adding this entire quantity to the basket, but we're not incrementing
     # it, so just check we can add the current quantity
     can_increase = _can_increase_quantity(
         request, variant, int(request.POST.get("quantity")), in_basket=False
@@ -175,7 +182,9 @@ def add_to_basket(request, product_id):
             """
             # update variant dropdown, including out of stock message
             variant_html = render_to_string(
-                "shop/includes/select_variant_field.html", {"product": variant.product, "product_id": product_id}, request
+                "shop/includes/select_variant_field.html",
+                {"product": variant.product, "product_id": product_id},
+                request,
             )
             resp_str += f"<div id='id_select_variant_wrapper_{ product_id }' hx-swap-oob='true'>{variant_html}</div>"
 
@@ -185,24 +194,32 @@ def add_to_basket(request, product_id):
             else:
                 # set quantity back to 1
                 quantity_to_add_html = render_to_string(
-                    "shop/includes/quantity_field.html", {"product_id": product_id, "value": 1}, request
-                    )
+                    "shop/includes/quantity_field.html",
+                    {"product_id": product_id, "value": 1},
+                    request,
+                )
                 resp_str += f"""
                     <div id='id_quantity_wrapper_{ product_id }' hx-swap-oob='true'>{quantity_to_add_html}</div>
                 """
         else:
-            logger.error("Error adding to basket: status_code %s resp %s", resp.status_code, resp.data)
+            logger.error(
+                "Error adding to basket: status_code %s resp %s",
+                resp.status_code,
+                resp.data,
+            )
             resp_str += f"""
                 <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Something went wrong</div>
                 """
     else:
-        logger.error("Error adding to basket: can't increase quantity %r", get_basket(request))
+        logger.error(
+            "Error adding to basket: can't increase quantity %r", get_basket(request)
+        )
         basket_quantity = get_basket_quantity(request)
         resp_str = f"<div>{_basket_icon_html(request, basket_quantity)}</div>"
         resp_str += f"""
         <div id='added_{product_id}' class='alert-danger mt-2' hx-swap-oob='true'>Quantity requested is not available</div>
         """
-    
+
     return HttpResponse(resp_str)
 
 
@@ -215,9 +232,7 @@ def update_quantity(request, ref):
 
     if current_item_resp.data["quantity"] == int(request.POST.get("quantity")):
         # nothing to do
-        result_html = (
-            f"<div id='updated_{product_id}' class='alert-info' hx-swap-oob='true'></div>"
-        )
+        result_html = f"<div id='updated_{product_id}' class='alert-info' hx-swap-oob='true'></div>"
     else:
         request.method = "PUT"
         resp = BasketViewSet.as_view({"put": "update"})(request, ref=ref)
@@ -231,9 +246,12 @@ def update_quantity(request, ref):
                 {"extra_rows": basket["extra_rows"]},
                 request,
             )
-            subtotal = get_basket_item(basket, product_id).get("subtotal", 0)
+            basket_item = get_basket_item(basket, product_id)
+            subtotal = basket_item.get("subtotal", 0)
+            total = basket_item.get("total", 0)
             result_html = f"""
                 <span id='subtotal_{product_id}' hx-swap-oob='true'>{subtotal}</span>
+                <span id='total_{product_id}' hx-swap-oob='true'>{total}</span>
                 <span id='quantity_{product_id}' hx-swap-oob='true'>{resp.data['quantity']}</span>
                 <span id='total' hx-swap-oob='true'>{basket['total']}</span>
                 <div id='updated_{product_id}' class='alert-success' hx-swap-oob='true'>Basket updated</div>
@@ -311,7 +329,12 @@ def basket_view(request):
     return TemplateResponse(
         request,
         "shop/basket.html",
-        {**basket_context, "payment_methods": payment_methods, "shipping_methods": shipping_methods, "hide_basket": True},
+        {
+            **basket_context,
+            "payment_methods": payment_methods,
+            "shipping_methods": shipping_methods,
+            "hide_basket": True,
+        },
     )
 
 
@@ -319,10 +342,13 @@ def checkout_view(request):
     payment_method = request.GET["payment-method"]
     shipping_method = request.GET["shipping-method"]
     context = {"payment_method": payment_method, "shipping_method": shipping_method}
-    
-    if request.method == "POST":
 
-        form = CheckoutForm(payment_method=payment_method, shipping_method=shipping_method, data=request.POST)
+    if request.method == "POST":
+        form = CheckoutForm(
+            payment_method=payment_method,
+            shipping_method=shipping_method,
+            data=request.POST,
+        )
         if form.is_valid():
             checkout = CheckoutViewSet.as_view({"post": "create"})(request)
 
@@ -341,7 +367,9 @@ def checkout_view(request):
         basket = Basket.objects.get(id=get_basket(request)["id"])
         basket.shipping_method = shipping_method
         basket.save()
-        form = CheckoutForm(payment_method=payment_method, shipping_method=shipping_method)
+        form = CheckoutForm(
+            payment_method=payment_method, shipping_method=shipping_method
+        )
 
     request.method = "GET"
     basket = get_basket(request)
@@ -365,13 +393,12 @@ def _order_status(request, token, new=False):
     context = {
         "order": {
             **serialized_order,
-            **order_as_basket, 
+            **order_as_basket,
             "amount_outstanding": order.amount_outstanding,
             "amount_paid": order.amount_paid,
-        }, 
-        "new_order": new, 
-        "hide_basket": True, 
-        
+        },
+        "new_order": new,
+        "hide_basket": True,
     }
     return TemplateResponse(request, "shop/order_status.html", context)
 

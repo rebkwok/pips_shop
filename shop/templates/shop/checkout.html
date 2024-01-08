@@ -22,7 +22,7 @@
                         <div class="row">
                             {% for item in items %}
                                 <div class="col">{{ item.product.name }} (<span id="quantity_{{ item.product_id }}">{{ item.quantity }}</span>)</div>
-                                <div class="col">£{{ item.subtotal }}</div>
+                                <div class="col">£{{ item.total }}</div>
                             {% endfor %}
                         </div>
                     {% endfor %}

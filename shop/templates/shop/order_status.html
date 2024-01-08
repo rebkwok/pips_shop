@@ -22,7 +22,7 @@
                         <ul>
                         {% for products in order.items.values %}
                             {% for product in products %}
-                            <li>{{ product.product.name }} ({{ product.category }}) - {{ product.quantity }} - £{{ product.subtotal }}</li>
+                            <li>{{ product.product.name }} ({{ product.category }}) - {{ product.quantity }} - £{{ product.total }}</li>
                             {% endfor %}
                         {% endfor %}
                         </ul>

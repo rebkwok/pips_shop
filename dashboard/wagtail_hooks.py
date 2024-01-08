@@ -8,7 +8,6 @@ from wagtail.snippets.views.snippets import SnippetViewSet
 from home.models import FooterText
 
 
-
 class FooterTextViewSet(SnippetViewSet):
     model = FooterText
     search_fields = ("body",)
@@ -17,9 +16,14 @@ class FooterTextViewSet(SnippetViewSet):
     menu_order = 400  # will put in 5th place (000 being 1st, 100 2nd)
 
 
-@hooks.register('register_admin_menu_item')
+@hooks.register("register_admin_menu_item")
 def register_collections_menu_item():
-  return MenuItem('Collections', reverse('wagtailadmin_collections:index'), icon_name='folder-inverse', order=300)
+    return MenuItem(
+        "Collections",
+        reverse("wagtailadmin_collections:index"),
+        icon_name="folder-inverse",
+        order=300,
+    )
 
 
 register_snippet(FooterTextViewSet)

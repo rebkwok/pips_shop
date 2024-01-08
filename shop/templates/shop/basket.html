@@ -77,7 +77,17 @@
                                     </form>
                                 </div>
                                 <div class="col">
-                                    £<span id="subtotal_{{ item.product_id }}">{{ item.subtotal }}</span>
+                                    {% if item.extra_rows %}<span class="text-strikethrough text-danger">
+                                    £<span id="subtotal_{{ item.product_id }}">{{ item.subtotal }}</span></span>    
+                                    {% endif %}
+                                    £<span id="total_{{ item.product_id }}">{{ item.total }}</span>
+                                </div>
+                                <div class="col">
+                                {% if item.extra_rows %}
+                                    {% for extra_row in item.extra_rows %}
+                                        {{ extra_row.label }}<br>
+                                    {% endfor %}
+                                {% endif %}
                                 </div>
                             </div>
                             {% endfor %}

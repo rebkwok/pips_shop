@@ -93,7 +93,10 @@ class HomePage(Page):
         blank=True, max_length=255, help_text="Title to display above the promo copy"
     )
     featured_section_body = RichTextField(
-        null=True, blank=True, max_length=1000, help_text="Optional description for the featured section"
+        null=True,
+        blank=True,
+        max_length=1000,
+        help_text="Optional description for the featured section",
     )
     featured_section = models.ForeignKey(
         "wagtailcore.Page",
@@ -185,7 +188,7 @@ class HomePage(Page):
         verbose_name="Hero Footer page",
         help_text="Choose a page to link to for the Footer",
     )
-    hero_footer_url= models.URLField(
+    hero_footer_url = models.URLField(
         null=True,
         blank=True,
         verbose_name="Hero Footer link",
@@ -251,7 +254,7 @@ class HomePage(Page):
                     [
                         FieldPanel("hero_footer"),
                         FieldPanel("hero_footer_page"),
-                        FieldPanel("hero_footer_url"), 
+                        FieldPanel("hero_footer_url"),
                     ]
                 ),
             ],
@@ -328,7 +331,7 @@ class FormPage(AbstractEmailForm):
             self.render_email(form),
             addresses,
             self.from_address,
-            reply_to=[reply_to]
+            reply_to=[reply_to],
         )
 
     def render_email(self, form):
