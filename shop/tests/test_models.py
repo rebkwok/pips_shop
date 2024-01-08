@@ -323,7 +323,7 @@ def test_get_sale_item_for_product_variant(freezer, sale_with_items):
 
     # make another product without its own SaleProduct discount; this inherits the SaleCategory
 
-    product = sale_with_items.products.first().product
+    product = sale_with_items.sale_products.first().product
 
     product_inheriting_discount = baker.make(
         "shop.Product",

@@ -346,14 +346,14 @@ class ProductVariant(Orderable):
         current_sale = Sale.current_sale()
         if current_sale:
             # Look for products on sale first; these can override their category discounts
-            sale_products = current_sale.products.filter(product__id=self.product.id)
+            sale_products = current_sale.sale_products.filter(product__id=self.product.id)
             if sale_products.exists():
                 # A product with a discount of 0 is intended to remove this product from the sale altogether,
                 # even if its overall category is on dale
                 if sale_products.first().discount == 0:
                     return None
                 return sale_products.first()
-            sale_categories = current_sale.categories.filter(
+            sale_categories = current_sale.sale_categories.filter(
                 category__id=self.product.category_page.id
             )
             if sale_categories.exists():
@@ -433,7 +433,7 @@ class SaleCategory(models.Model):
     A sale discount for a category
     """
 
-    sale = ParentalKey("Sale", related_name="categories")
+    sale = ParentalKey("Sale", related_name="sale_categories")
     category = models.ForeignKey("CategoryPage", on_delete=models.CASCADE)
     discount = models.PositiveIntegerField(
         default=10, validators=[MaxValueValidator(100)]
@@ -448,7 +448,7 @@ class SaleProduct(models.Model):
     A sale discount for a product
     """
 
-    sale = ParentalKey("Sale", related_name="products")
+    sale = ParentalKey("Sale", related_name="sale_products")
     product = models.ForeignKey("Product", on_delete=models.CASCADE)
     discount = models.PositiveIntegerField(
         default=10, validators=[MaxValueValidator(100)]
@@ -498,13 +498,13 @@ class Sale(ClusterableModel):
             heading="Banner options",
         ),
         InlinePanel(
-            "categories",
+            "sale_categories",
             heading="Sale Categories",
             label="Category",
             help_text="Define discounts to apply to entire categories of products.",
         ),
         InlinePanel(
-            "products",
+            "sale_products",
             heading="Sale Products",
             label="Product",
             help_text=(
@@ -531,7 +531,7 @@ class Sale(ClusterableModel):
         if live_sales.exists():
             # sale is only actually live if there are products or categories on sale in it
             sale = live_sales.first()
-            if sale.categories.exists() or sale.products.exists():
+            if sale.sale_categories.exists() or sale.sale_products.exists():
                 return sale
 
     def __str__(self):
