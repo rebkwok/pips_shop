@@ -225,10 +225,9 @@ def test_populate_order_from_basket(product):
     variant = baker.make(
         "shop.ProductVariant", product=product, variant_name="Small", price=10
     )
-    item = baker.make("shop.BasketItem", product=variant, quantity=2)
-    basket.items.add(item)
-
+    basket.add(product=variant, quantity=2)
     order = baker.make("shop.Order")
+
     order.populate_from_basket(basket=basket, request=None)
     assert order.items.count() == 1
     assert order.shipping_method == "collect"
