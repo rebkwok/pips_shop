@@ -2,7 +2,7 @@ from salesman.admin.wagtail.panels import ReadOnlyPanel
 from salesman.admin.wagtail_hooks import OrderAdmin as SalesmanOrderAdmin
 from salesman.core.utils import get_salesman_model
 from wagtail.admin.ui.tables import BooleanColumn
-from wagtail.contrib.modeladmin.options import modeladmin_register
+from wagtail_modeladmin.options import modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
 

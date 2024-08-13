@@ -56,7 +56,12 @@ jobs:
           source ${{ github.workspace }}/venv/bin/activate
           pytest --cov . -n auto
 
-      - name: Coveralls
-        uses: AndreMiras/coveralls-python-action@develop
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Coveralls
+      #   uses: AndreMiras/coveralls-python-action@develop
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Report coverage
+        run: |
+          source ${{ github.workspace }}/venv/bin/activate
+          coverage report

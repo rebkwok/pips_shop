@@ -1,5 +1,6 @@
 Django
-wagtail
+wagtail<6
+wagtail-modeladmin
 pip-tools
 django-environ
 django-extensions
@@ -13,7 +14,6 @@ django-storages[boto3]
 django-salesman[pygments]
 django-salesman-stripe
 crispy-bootstrap4
-
 pytest
 coverage
 pytest-django
