@@ -1,4 +1,5 @@
 Django
+# wagtail pinned and django will be <5 until django-salesman 1.3.0 released
 wagtail<6
 wagtail-modeladmin
 pip-tools
@@ -12,14 +13,15 @@ pymemcache
 whitenoise
 django-storages[boto3]
 django-salesman[pygments]
-django-salesman-stripe
+# Forked to allow unpgrading ancient pinned version of stripe
+git+https://github.com/rebkwok/django-salesman-stripe.git
 crispy-bootstrap4
 pytest
 coverage
 pytest-django
 pytest-cov
 pytest-env
-pytest-freezegun
+pytest-freezer
 pytest-xdist
 wagtail-factories
 ipython
@@ -28,4 +30,3 @@ black
 model_bakery
 wagtail-factories
 requests-mock
-
