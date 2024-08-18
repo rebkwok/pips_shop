@@ -197,7 +197,7 @@ USE_TZ = True
 SHORT_DATETIME_FORMAT = "d-M-Y H:i"
 SHORT_DATE_FORMAT = "d-M-Y"
 
-if TESTING or env("LOCAL") or env("CI"):  # use local cache for tests
+if TESTING or env("CI"):  # use local cache for tests
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -207,9 +207,8 @@ if TESTING or env("LOCAL") or env("CI"):  # use local cache for tests
 else:  # pragma: no cover
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
-            "LOCATION": "127.0.0.1:11211",
-            "KEY_PREFIX": "pips_shop",
+            "BACKEND": 'django.core.cache.backends.filebased.FileBasedCache',
+            "LOCATION": root("cache"),
         }
     }
 
