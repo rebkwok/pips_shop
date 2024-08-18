@@ -13,3 +13,5 @@ media/
 *.log
 
 .coverage
+
+cache/
