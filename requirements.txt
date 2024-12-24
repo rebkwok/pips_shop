@@ -6,71 +6,71 @@
 #
 aiofiles==24.1.0
     # via nicegui
-aiohappyeyeballs==2.3.7
+aiohappyeyeballs==2.4.4
     # via aiohttp
-aiohttp==3.10.3
+aiohttp==3.11.11
     # via
     #   nicegui
     #   python-socketio
-aiosignal==1.3.1
+aiosignal==1.3.2
     # via aiohttp
 anyascii==0.3.2
     # via wagtail
-anyio==4.4.0
+anyio==4.7.0
     # via
     #   httpx
     #   starlette
     #   watchfiles
 asgiref==3.8.1
     # via django
-asttokens==2.4.1
+asttokens==3.0.0
     # via stack-data
-attrs==24.2.0
+attrs==24.3.0
     # via aiohttp
-beautifulsoup4==4.11.2
+beautifulsoup4==4.12.3
     # via wagtail
 bidict==0.23.1
     # via python-socketio
-black==24.8.0
+black==24.10.0
     # via -r requirements.in
-boto3==1.35.0
+boto3==1.35.87
     # via
     #   django-ses
     #   django-storages
-botocore==1.35.0
+botocore==1.35.87
     # via
     #   boto3
     #   s3transfer
-build==1.2.1
+build==1.2.2.post1
     # via pip-tools
-certifi==2024.7.4
+certifi==2024.12.14
     # via
     #   httpcore
     #   httpx
     #   nicegui
     #   requests
-cffi==1.17.0
+cffi==1.17.1
     # via cryptography
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   black
     #   pip-tools
     #   uvicorn
-coverage[toml]==7.6.1
+coverage[toml]==7.6.9
     # via
     #   -r requirements.in
     #   pytest-cov
-crispy-bootstrap4==2024.1
+crispy-bootstrap4==2024.10
     # via -r requirements.in
-cryptography==43.0.0
+cryptography==44.0.0
     # via django-ses
 decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
     # via willow
-django==4.2.15
+django==4.2.17
     # via
     #   -r requirements.in
     #   crispy-bootstrap4
@@ -85,6 +85,7 @@ django==4.2.15
     #   django-taggit
     #   django-treebeard
     #   djangorestframework
+    #   laces
     #   model-bakery
     #   wagtail
 django-crispy-forms==2.3
@@ -93,23 +94,23 @@ django-environ==0.11.2
     # via -r requirements.in
 django-extensions==3.2.3
     # via -r requirements.in
-django-filter==23.5
+django-filter==24.3
     # via wagtail
-django-modelcluster==6.3
+django-modelcluster==6.4
     # via wagtail
 django-permissionedforms==0.1
     # via wagtail
-django-salesman[pygments]==1.2.0
+django-salesman[pygments]==1.2.1
     # via
     #   -r requirements.in
     #   django-salesman-stripe
 django-salesman-stripe @ git+https://github.com/rebkwok/django-salesman-stripe.git
     # via -r requirements.in
-django-ses[events]==4.1.0
+django-ses[events]==4.3.1
     # via -r requirements.in
 django-storages[boto3]==1.14.4
     # via -r requirements.in
-django-taggit==4.0.0
+django-taggit==6.1.0
     # via wagtail
 django-treebeard==4.7.1
     # via wagtail
@@ -117,27 +118,27 @@ djangorestframework==3.15.2
     # via
     #   django-salesman
     #   wagtail
-docutils==0.19
+docutils==0.21.2
     # via nicegui
-draftjs-exporter==2.1.7
+draftjs-exporter==5.0.0
     # via wagtail
-et-xmlfile==1.1.0
+et-xmlfile==2.0.0
     # via openpyxl
 execnet==2.1.1
     # via pytest-xdist
-executing==2.0.1
+executing==2.1.0
     # via stack-data
-factory-boy==3.3.0
+factory-boy==3.3.1
     # via wagtail-factories
-faker==27.0.0
+faker==33.1.0
     # via factory-boy
-fastapi==0.109.2
+fastapi==0.115.6
     # via nicegui
 filetype==1.2.0
     # via willow
 freezegun==1.5.1
     # via pytest-freezer
-frozenlist==1.4.1
+frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
@@ -148,17 +149,15 @@ h11==0.14.0
     #   httpcore
     #   uvicorn
     #   wsproto
-html5lib==1.1
-    # via wagtail
 htmx==0.0.0
     # via -r requirements.in
-httpcore==1.0.5
+httpcore==1.0.7
     # via httpx
-httptools==0.6.1
+httptools==0.6.4
     # via uvicorn
-httpx==0.27.0
+httpx==0.28.1
     # via nicegui
-idna==3.7
+idna==3.10
     # via
     #   anyio
     #   httpx
@@ -168,13 +167,13 @@ ifaddr==0.2.0
     # via nicegui
 iniconfig==2.0.0
     # via pytest
-ipython==8.26.0
+ipython==8.31.0
     # via -r requirements.in
 itsdangerous==2.2.0
     # via nicegui
-jedi==0.19.1
+jedi==0.19.2
     # via ipython
-jinja2==3.1.4
+jinja2==3.1.5
     # via nicegui
 jmespath==1.0.1
     # via
@@ -182,27 +181,29 @@ jmespath==1.0.1
     #   botocore
 l18n==2021.3
     # via wagtail
-markdown2==2.5.0
+laces==0.1.1
+    # via wagtail
+markdown2==2.5.2
     # via nicegui
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via jinja2
 matplotlib-inline==0.1.7
     # via ipython
-model-bakery==1.19.3
+model-bakery==1.20.0
     # via -r requirements.in
-multidict==6.0.5
+multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
 mypy-extensions==1.0.0
     # via black
-nicegui==1.4.35
+nicegui==2.9.0
     # via htmx
 openpyxl==3.1.5
     # via wagtail
-orjson==3.10.7
+orjson==3.10.12
     # via nicegui
-packaging==24.1
+packaging==24.2
     # via
     #   black
     #   build
@@ -214,23 +215,27 @@ pathspec==0.12.1
     # via black
 pexpect==4.9.0
     # via ipython
-pillow==10.4.0
+pillow==11.0.0
     # via
     #   pillow-heif
     #   wagtail
-pillow-heif==0.18.0
+pillow-heif==0.21.0
     # via willow
 pip-tools==7.4.1
     # via -r requirements.in
-platformdirs==4.2.2
+platformdirs==4.3.6
     # via black
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.48
     # via ipython
+propcache==0.2.1
+    # via
+    #   aiohttp
+    #   yarl
 pscript==0.7.7
     # via vbuild
-psycopg2==2.9.9
+psycopg2==2.9.10
     # via -r requirements.in
 ptyprocess==0.7.0
     # via pexpect
@@ -238,7 +243,7 @@ pure-eval==0.2.3
     # via stack-data
 pycparser==2.22
     # via cffi
-pydantic==1.10.17
+pydantic==1.10.19
     # via
     #   fastapi
     #   htmx
@@ -249,11 +254,11 @@ pygments==2.18.0
     #   nicegui
 pymemcache==4.0.0
     # via -r requirements.in
-pyproject-hooks==1.1.0
+pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.3.2
+pytest==8.3.4
     # via
     #   -r requirements.in
     #   pytest-cov
@@ -261,13 +266,13 @@ pytest==8.3.2
     #   pytest-env
     #   pytest-freezer
     #   pytest-xdist
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via -r requirements.in
-pytest-django==4.8.0
+pytest-django==4.9.0
     # via -r requirements.in
-pytest-env==1.1.3
+pytest-env==1.1.5
     # via -r requirements.in
-pytest-freezer==0.4.8
+pytest-freezer==0.4.9
     # via -r requirements.in
 pytest-xdist==3.6.1
     # via -r requirements.in
@@ -278,17 +283,14 @@ python-dateutil==2.9.0.post0
     #   freezegun
 python-dotenv==1.0.1
     # via uvicorn
-python-engineio==4.9.1
+python-engineio==4.11.1
     # via python-socketio
-python-multipart==0.0.9
+python-multipart==0.0.20
     # via nicegui
-python-socketio[asyncio-client]==5.11.3
+python-socketio[asyncio-client]==5.12.0
     # via nicegui
-pytz==2024.1
-    # via
-    #   django-modelcluster
-    #   django-ses
-    #   l18n
+pytz==2024.2
+    # via l18n
 pyyaml==6.0.2
     # via uvicorn
 requests==2.32.3
@@ -300,31 +302,27 @@ requests==2.32.3
     #   wagtail
 requests-mock==1.12.1
     # via -r requirements.in
-ruff==0.6.1
+ruff==0.8.4
     # via -r requirements.in
-s3transfer==0.10.2
+s3transfer==0.10.4
     # via boto3
-simple-websocket==1.0.0
+simple-websocket==1.1.0
     # via python-engineio
-six==1.16.0
+six==1.17.0
     # via
-    #   asttokens
-    #   html5lib
     #   l18n
     #   python-dateutil
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   httpx
+    # via anyio
 soupsieve==2.6
     # via beautifulsoup4
-sqlparse==0.5.1
+sqlparse==0.5.3
     # via django
 stack-data==0.6.3
     # via ipython
-starlette==0.36.3
+starlette==0.41.3
     # via fastapi
-stripe==10.8.0
+stripe==10.12.0
     # via django-salesman-stripe
 telepath==0.3.1
     # via wagtail
@@ -334,52 +332,52 @@ traitlets==5.14.3
     #   matplotlib-inline
 typing-extensions==4.12.2
     # via
+    #   anyio
+    #   faker
     #   fastapi
     #   ipython
     #   nicegui
     #   pydantic
     #   stripe
-urllib3==2.2.2
+urllib3==2.3.0
     # via
     #   botocore
     #   nicegui
     #   requests
-uvicorn[standard]==0.30.6
+uvicorn[standard]==0.34.0
     # via nicegui
-uvloop==0.20.0
+uvloop==0.21.0
     # via uvicorn
 vbuild==0.8.2
     # via nicegui
-wagtail==5.2.6
+wagtail==6.3.1
     # via
     #   -r requirements.in
     #   wagtail-factories
     #   wagtail-modeladmin
 wagtail-factories==4.2.1
     # via -r requirements.in
-wagtail-modeladmin==2.0.0
+wagtail-modeladmin==2.1.0
     # via -r requirements.in
-watchfiles==0.23.0
+watchfiles==1.0.3
     # via
     #   nicegui
     #   uvicorn
 wcwidth==0.2.13
     # via prompt-toolkit
-webencodings==0.5.1
-    # via html5lib
-websockets==12.0
+websockets==14.1
     # via uvicorn
-wheel==0.44.0
+wheel==0.45.1
     # via pip-tools
-whitenoise==6.7.0
+whitenoise==6.8.2
     # via -r requirements.in
-willow[heif]==1.6.3
+willow[heif]==1.9.0
     # via
     #   wagtail
     #   willow
 wsproto==1.2.0
     # via simple-websocket
-yarl==1.9.4
+yarl==1.18.3
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
