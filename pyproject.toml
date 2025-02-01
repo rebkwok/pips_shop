@@ -67,7 +67,8 @@ omit = [
   "*/migrations/*",
   "*/tests/*",
   "*wsgi*",
-  "manage.py"
+  "manage.py",
+  "pips_shop/custom_logging.py"
 ]
 
 [tool.coverage.report]
