@@ -262,6 +262,8 @@ class HomePage(Page):
         ),
     ]
 
+    search_fields = Page.search_fields
+
     def __str__(self):
         return self.title
 

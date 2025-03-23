@@ -10,7 +10,7 @@ from django.urls import reverse
 
 from salesman.core.utils import get_salesman_model
 
-from .conftest import CategoryPageFactory
+from .factories import CategoryPageFactory
 from ..models import Sale, SaleCategory, SaleProduct
 
 pytestmark = pytest.mark.django_db
